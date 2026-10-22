@@ -1,0 +1,169 @@
+
+.search-flights-page {
+  min-height: calc(100vh - 82px);
+  padding: 76px clamp(20px, 7vw, 110px) 90px;
+  background:
+    radial-gradient(ellipse at 85% 5%, rgba(113, 190, 245, 0.18), transparent 34%),
+    #f5f9fd;
+}
+
+.search-flights-hero {
+  max-width: 850px;
+  margin: 0 auto 42px;
+  text-align: center;
+}
+
+.search-flights-eyebrow {
+  margin: 0 0 15px;
+  color: #1478c9;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.search-flights-hero h1 {
+  margin: 0;
+  color: #102b46;
+  font-size: clamp(2.3rem, 5vw, 4.2rem);
+  line-height: 1.12;
+  letter-spacing: -2px;
+}
+
+.search-flights-intro {
+  margin: 20px auto 0;
+  color: #64768a;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.search-flights-card {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(22px, 4vw, 40px);
+  border: 1px solid #e5edf4;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 18px 55px rgba(16, 43, 70, 0.08);
+}
+
+.trip-type-options {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.trip-option {
+  padding: 11px 20px;
+  border: 1px solid #dce6ef;
+  border-radius: 9px;
+  background: #fff;
+  color: #52677b;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
+.trip-option:hover,
+.trip-option.selected {
+  border-color: #1478c9;
+  background: #eaf5ff;
+  color: #126bb2;
+}
+
+.flight-search-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.flight-field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.flight-field > span {
+  color: #29455f;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.flight-field input,
+.flight-field select {
+  width: 100%;
+  min-height: 54px;
+  padding: 0 15px;
+  border: 1px solid #dce6ef;
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+  color: #18324a;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.flight-field input:focus,
+.flight-field select:focus {
+  border-color: #1478c9;
+  box-shadow: 0 0 0 3px rgba(20, 120, 201, 0.12);
+}
+
+.flight-field input::placeholder {
+  color: #91a0af;
+}
+
+.flight-search-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  align-self: end;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 10px;
+  background: #1478c9;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(20, 120, 201, 0.17);
+  cursor: pointer;
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.flight-search-button:hover {
+  background: #0e5fa4;
+  transform: translateY(-2px);
+}
+
+.flight-search-button span {
+  font-size: 1.4rem;
+}
+
+.search-flights-note {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 30px;
+  color: #64768a;
+  text-align: center;
+}
+
+.search-flights-note > span {
+  color: #1478c9;
+}
+
+.search-flights-note p {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trip-option,
+  .flight-field input,
+  .flight-field select,
+  .flight-search-button {
+    transition: none;
+  }
+}

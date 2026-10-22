@@ -1,0 +1,150 @@
+
+import { useState } from "react";
+import "./Search_flights.css";
+import "./Search_flights-mobile.css";
+
+function SearchFlights() {
+  const [tripType, setTripType] = useState("round-trip");
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
+  const [departureDate, setDepartureDate] = useState("");
+  const [returnDate, setReturnDate] = useState("");
+  const [passengers, setPassengers] = useState("1");
+
+  function handleSearch(event) {
+    event.preventDefault();
+
+    if (!origin.trim() || !destination.trim() || !departureDate) {
+      alert("Please enter your origin, destination, and departure date.");
+      return;
+    }
+
+    if (origin.trim().toUpperCase() === destination.trim().toUpperCase()) {
+      alert("Origin and destination must be different.");
+      return;
+    }
+
+    if (tripType === "round-trip" && !returnDate) {
+      alert("Please select a return date.");
+      return;
+    }
+
+    if (tripType === "round-trip" && returnDate < departureDate) {
+      alert("Your return date must be on or after your departure date.");
+      return;
+    }
+
+    // We'll connect this form to the flight API next.
+    alert(
+      `Search request ready!\n${origin.toUpperCase()} → ${destination.toUpperCase()}\nDeparture: ${departureDate}`
+    );
+  }
+
+  return (
+    <section className="search-flights-page">
+      <div className="search-flights-hero">
+        <p className="search-flights-eyebrow">YOUR NEXT ADVENTURE STARTS HERE</p>
+        <h1>Where will you go next?</h1>
+        <p className="search-flights-intro">
+          Find flights, compare options, and plan your next journey.
+        </p>
+      </div>
+
+      <div className="search-flights-card">
+        <div className="trip-type-options" aria-label="Trip type">
+          <button
+            type="button"
+            className={tripType === "round-trip" ? "trip-option selected" : "trip-option"}
+            onClick={() => setTripType("round-trip")}
+          >
+            Round trip
+          </button>
+
+          <button
+            type="button"
+            className={tripType === "one-way" ? "trip-option selected" : "trip-option"}
+            onClick={() => setTripType("one-way")}
+          >
+            One way
+          </button>
+        </div>
+
+        <form className="flight-search-form" onSubmit={handleSearch}>
+          <label className="flight-field">
+            <span>From</span>
+            <input
+              type="text"
+              placeholder="Airport or city (e.g. JFK)"
+              value={origin}
+              onChange={(event) => setOrigin(event.target.value)}
+              autoComplete="off"
+              required
+            />
+          </label>
+
+          <label className="flight-field">
+            <span>To</span>
+            <input
+              type="text"
+              placeholder="Destination (e.g. LAX)"
+              value={destination}
+              onChange={(event) => setDestination(event.target.value)}
+              autoComplete="off"
+              required
+            />
+          </label>
+
+          <label className="flight-field">
+            <span>Departure</span>
+            <input
+              type="date"
+              value={departureDate}
+              min={new Date().toISOString().split("T")[0]}
+              onChange={(event) => setDepartureDate(event.target.value)}
+              required
+            />
+          </label>
+
+          {tripType === "round-trip" && (
+            <label className="flight-field">
+              <span>Return</span>
+              <input
+                type="date"
+                value={returnDate}
+                min={departureDate || new Date().toISOString().split("T")[0]}
+                onChange={(event) => setReturnDate(event.target.value)}
+                required
+              />
+            </label>
+          )}
+
+          <label className="flight-field passenger-field">
+            <span>Passengers</span>
+            <select
+              value={passengers}
+              onChange={(event) => setPassengers(event.target.value)}
+            >
+              <option value="1">1 passenger</option>
+              <option value="2">2 passengers</option>
+              <option value="3">3 passengers</option>
+              <option value="4">4 passengers</option>
+              <option value="5">5 passengers</option>
+              <option value="6">6 passengers</option>
+            </select>
+          </label>
+
+          <button className="flight-search-button" type="submit">
+            <span aria-hidden="true">⌕</span> Search Flights
+          </button>
+        </form>
+      </div>
+
+      <div className="search-flights-note">
+        <span aria-hidden="true">✈</span>
+        <p>Choose your destinations and dates to get started.</p>
+      </div>
+    </section>
+  );
+}
+
+export default SearchFlights;
