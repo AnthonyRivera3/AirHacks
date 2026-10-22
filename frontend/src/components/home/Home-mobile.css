@@ -1,0 +1,201 @@
+@media (max-width: 1100px) {
+    .home-hero {
+        grid-template-columns: minmax(0, 1fr) minmax(0, .95fr);
+        gap: 12px;
+        padding-left: 30px;
+        padding-right: 30px;
+    }
+
+    .home-hero h1 {
+        font-size: clamp(40px, 5.2vw, 60px);
+    }
+
+    .flight-visual {
+        min-height: 0;
+    }
+
+    .traffic-panel {
+        width: 166px;
+    }
+
+    .home-features {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        row-gap: 26px;
+    }
+
+    .terminal-card {
+        margin-left: 20px;
+    }
+
+    .feature-card:nth-child(3) {
+        border-left: 0;
+        padding-left: 0;
+    }
+}
+
+@media (max-width: 760px) {
+    .home-hero {
+        grid-template-columns: 1fr;
+        padding: 50px 22px 34px;
+        gap: 10px;
+    }
+
+    .home-hero h1 {
+        font-size: clamp(42px, 10vw, 64px);
+    }
+
+    .home-eyebrow {
+        font-size: 10px;
+        letter-spacing: .08em;
+        margin-bottom: 16px;
+    }
+
+    .home-description {
+        margin: 19px 0 23px;
+        font-size: 15px;
+    }
+
+    .desktop-break {
+        display: none;
+    }
+
+    .hero-actions {
+        gap: 12px;
+    }
+
+    .hero-hint {
+        font-size: 8px;
+    }
+
+    .flight-table-panel {
+        margin-top: 27px;
+    }
+
+    .flight-table {
+        font-size: 9px;
+    }
+
+    .flight-table th,
+    .flight-table td {
+        padding-left: 9px;
+        padding-right: 9px;
+    }
+
+    .flight-visual {
+        width: 100%;
+        min-height: 0;
+        aspect-ratio: 1 / .94;
+        max-width: 530px;
+        margin: 0 auto;
+    }
+
+    .globe-wrap {
+        width: 86%;
+    }
+
+    .traffic-panel {
+        top: 2%;
+        right: 0;
+        width: 155px;
+        padding: 9px;
+    }
+
+    .metric {
+        font-size: 7px;
+    }
+
+    .hud-label-jfk {
+        left: 0;
+        top: 32%;
+    }
+
+    .hud-label-lhr {
+        right: 0;
+        top: 15%;
+    }
+
+    .hud-label-dxb {
+        right: 0;
+        top: 58%;
+    }
+
+    .coordinates {
+        left: 0;
+        bottom: 7%;
+        font-size: 8px;
+    }
+
+    .hero-corner-code {
+        display: none;
+    }
+
+    .home-features {
+        grid-template-columns: 1fr;
+        padding: 30px 22px;
+        gap: 0;
+    }
+
+    .feature-card,
+    .feature-card+.feature-card {
+        padding: 22px 0;
+        border-left: 0;
+        border-bottom: 1px solid rgba(0, 190, 255, .15);
+    }
+
+    .feature-card:first-child {
+        padding-top: 0;
+    }
+
+    .feature-card>p:not(.feature-index) {
+        max-width: 380px;
+    }
+
+    .terminal-card {
+        margin: 24px 0 0;
+    }
+
+    .home-about {
+        padding: 44px 22px 50px;
+    }
+}
+
+@media (max-width: 390px) {
+    .home-hero {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .home-hero h1 {
+        font-size: 39px;
+    }
+
+    .home-cta {
+        width: 100%;
+    }
+
+    .hero-hint {
+        width: 100%;
+    }
+
+    .flight-table {
+        min-width: 470px;
+    }
+
+    .traffic-panel {
+        transform: scale(.88);
+        transform-origin: top right;
+    }
+
+    .hud-label {
+        font-size: 9px;
+    }
+
+    .coordinates span {
+        display: none;
+    }
+
+    .home-features {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
