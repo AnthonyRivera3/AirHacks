@@ -51,3 +51,15 @@
     font-size: 0.9rem;
   }
 }
+
+
+@media (max-width: 700px) {
+    .flight-result-card {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .flight-result-price {
+        text-align: left;
+    }
+}

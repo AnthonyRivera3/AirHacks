@@ -167,3 +167,86 @@
     transition: none;
   }
 }
+
+
+.flight-results {
+    width: min(1100px, 100%);
+    margin: 32px auto;
+}
+
+.flight-results-list {
+    display: grid;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.flight-result-card {
+    display: grid;
+    grid-template-columns: 1fr 2fr auto;
+    align-items: center;
+    gap: 24px;
+    padding: 22px;
+    border: 1px solid #253746;
+    border-radius: 12px;
+    background: #101c28;
+    color: #f1f5f9;
+}
+
+.flight-result-airline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.flight-result-airline img {
+    object-fit: contain;
+}
+
+.flight-result-route {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.flight-result-route > div {
+    display: grid;
+    gap: 6px;
+}
+
+.flight-result-route span,
+.flight-result-price span {
+    color: #9aafc0;
+    font-size: 0.85rem;
+}
+
+.flight-result-duration {
+    text-align: center;
+}
+
+.flight-result-price {
+    display: grid;
+    gap: 6px;
+    text-align: right;
+}
+
+.flight-result-price strong {
+    color: #52e0d0;
+    font-size: 1.2rem;
+}
+
+.flight-results-message,
+.flight-results-error {
+    padding: 18px;
+    border-radius: 10px;
+    background: #101c28;
+    color: #e2e8f0;
+}
+
+.flight-results-error button {
+    margin-top: 10px;
+    padding: 9px 14px;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+}
