@@ -146,6 +146,26 @@ app.post("/api/flights/search", async (req, res) => {
 
     const offers = result.data?.offers || [];
 
+    console.log("Duffel live mode:", result.data?.live_mode);
+
+    console.log(
+  "Duffel live mode:",
+  result.data?.live_mode
+);
+
+console.log(
+  "Airlines returned:",
+  offers.map((offer) => ({
+    owner: offer.owner?.name,
+    segments: offer.slices?.flatMap((slice) =>
+      slice.segments.map((segment) => ({
+        operating: segment.operating_carrier?.name,
+        marketing: segment.marketing_carrier?.name,
+      }))
+    ),
+  }))
+);
+
     return res.json({
       offers,
       count: offers.length,
