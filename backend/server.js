@@ -9,9 +9,90 @@ const PORT = process.env.PORT || 5001;
 app.use(cors());
 app.use(express.json());
 
+const API_BASE_URL =
+  process.env.TRAVELPORT_API_BASE_URL ||
+  "https://api.pp.travelport.net/11/air";
+
+let cachedAccessToken = null;
+let tokenExpiresAt = 0;
+
 app.get("/", (req, res) => {
-  res.json({ message: "AirHacks backend is running!" });
+  res.json({
+    message: "AirHacks backend is running with Travelport!",
+  });
 });
+
+// Get and cache a Travelport access token.
+async function getTravelportToken() {
+  if (cachedAccessToken && Date.now() < tokenExpiresAt - 60_000) {
+    return cachedAccessToken;
+  }
+
+  const {
+    TRAVELPORT_AUTH_URL,
+    TRAVELPORT_USERNAME,
+    TRAVELPORT_PASSWORD,
+    TRAVELPORT_CLIENT_ID,
+    TRAVELPORT_CLIENT_SECRET,
+  } = process.env;
+
+  const missing = [
+    ["TRAVELPORT_AUTH_URL", TRAVELPORT_AUTH_URL],
+    ["TRAVELPORT_USERNAME", TRAVELPORT_USERNAME],
+    ["TRAVELPORT_PASSWORD", TRAVELPORT_PASSWORD],
+    ["TRAVELPORT_CLIENT_ID", TRAVELPORT_CLIENT_ID],
+    ["TRAVELPORT_CLIENT_SECRET", TRAVELPORT_CLIENT_SECRET],
+  ]
+    .filter(([, value]) => !value)
+    .map(([name]) => name);
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing Travelport environment variables: ${missing.join(", ")}`
+    );
+  }
+
+  const response = await fetch(TRAVELPORT_AUTH_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    body: new URLSearchParams({
+      grant_type: "password",
+      username: TRAVELPORT_USERNAME,
+      password: TRAVELPORT_PASSWORD,
+      client_id: TRAVELPORT_CLIENT_ID,
+      client_secret: TRAVELPORT_CLIENT_SECRET,
+    }),
+  });
+
+  const responseText = await response.text();
+  let data;
+
+  try {
+    data = responseText ? JSON.parse(responseText) : {};
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok || !data.access_token) {
+    // Never log credentials or the access token.
+    console.error("Travelport authentication failed:", {
+      status: response.status,
+      error: data.error_description || data.error || "Authentication failed",
+    });
+
+    throw new Error("Travelport authentication failed.");
+  }
+
+  cachedAccessToken = data.access_token;
+
+  const expiresIn = Number(data.expires_in || 86400);
+  tokenExpiresAt = Date.now() + expiresIn * 1000;
+
+  return cachedAccessToken;
+}
 
 app.post("/api/flights/search", async (req, res) => {
   try {
@@ -24,7 +105,7 @@ app.post("/api/flights/search", async (req, res) => {
       cabinClass = "economy",
     } = req.body;
 
-    // Validate the required search fields.
+    // Validate required fields.
     if (!origin || !destination || !departureDate) {
       return res.status(400).json({
         error: "Enter an origin, destination, and departure date.",
@@ -32,21 +113,39 @@ app.post("/api/flights/search", async (req, res) => {
     }
 
     if (
+      typeof origin !== "string" ||
+      typeof destination !== "string" ||
       !/^[A-Za-z]{3}$/.test(origin) ||
       !/^[A-Za-z]{3}$/.test(destination)
     ) {
       return res.status(400).json({
-        error: "Use three-letter airport codes, such as JFK and LHR.",
+        error: "Use three-letter airport codes, such as JFK and LAX.",
       });
     }
 
-    if (origin.toUpperCase() === destination.toUpperCase()) {
+    const originCode = origin.toUpperCase();
+    const destinationCode = destination.toUpperCase();
+
+    if (originCode === destinationCode) {
       return res.status(400).json({
         error: "Origin and destination must be different.",
       });
     }
 
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(departureDate)) {
+    const isValidDate = (value) => {
+      if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return false;
+      }
+
+      const date = new Date(`${value}T00:00:00Z`);
+
+      return (
+        !Number.isNaN(date.getTime()) &&
+        date.toISOString().slice(0, 10) === value
+      );
+    };
+
+    if (!isValidDate(departureDate)) {
       return res.status(400).json({
         error: "Choose a valid departure date.",
       });
@@ -54,8 +153,7 @@ app.post("/api/flights/search", async (req, res) => {
 
     if (
       returnDate &&
-      (!/^\d{4}-\d{2}-\d{2}$/.test(returnDate) ||
-        returnDate < departureDate)
+      (!isValidDate(returnDate) || returnDate < departureDate)
     ) {
       return res.status(400).json({
         error: "Return date must be on or after departure date.",
@@ -74,111 +172,162 @@ app.post("/api/flights/search", async (req, res) => {
       });
     }
 
-    const allowedCabins = [
-      "economy",
-      "premium_economy",
-      "business",
-      "first",
-    ];
+    const cabinMap = {
+      economy: "Economy",
+      premium_economy: "PremiumEconomy",
+      business: "Business",
+      first: "First",
+    };
 
-    if (!allowedCabins.includes(cabinClass)) {
+    if (!cabinMap[cabinClass]) {
       return res.status(400).json({
         error: "Choose a valid cabin class.",
       });
     }
 
-    if (!process.env.DUFFEL_ACCESS_TOKEN) {
+    const pcc = process.env.TRAVELPORT_PCC;
+
+    if (!pcc) {
       return res.status(500).json({
-        error: "Duffel API token is not configured on the server.",
+        error: "TRAVELPORT_PCC is missing from backend/.env.",
       });
     }
 
-    const slices = [
+    const token = await getTravelportToken();
+
+    const searchCriteriaFlight = [
       {
-        origin: origin.toUpperCase(),
-        destination: destination.toUpperCase(),
-        departure_date: departureDate,
+        "@type": "SearchCriteriaFlight",
+        departureDate,
+        From: { value: originCode },
+        To: { value: destinationCode },
       },
     ];
 
-    // A second slice represents the return journey.
     if (returnDate) {
-      slices.push({
-        origin: destination.toUpperCase(),
-        destination: origin.toUpperCase(),
-        departure_date: returnDate,
+      searchCriteriaFlight.push({
+        "@type": "SearchCriteriaFlight",
+        departureDate: returnDate,
+        From: { value: destinationCode },
+        To: { value: originCode },
       });
     }
 
-    const duffelResponse = await fetch(
-      "https://api.duffel.com/air/offer_requests?return_offers=true",
+    // Request structure based on the Travelport example you provided.
+    const requestBody = {
+      "@type": "CatalogProductOfferingsQueryRequest",
+      CatalogProductOfferingsRequest: {
+        "@type": "CatalogProductOfferingsRequestAir",
+        maxNumberOfUpsellsToReturn: 4,
+        contentSourceList: ["NDC"],
+        PassengerCriteria: [
+          {
+            "@type": "PassengerCriteria",
+            number: passengerCount,
+            passengerTypeCode: "ADT",
+          },
+        ],
+        SearchCriteriaFlight: searchCriteriaFlight,
+        SearchModifiersAir: {
+          "@type": "SearchModifiersAir",
+          CabinPreference: [
+            {
+              "@type": "CabinPreference",
+              preferenceType: "Preferred",
+              cabins: [cabinMap[cabinClass]],
+            },
+          ],
+        },
+      },
+    };
+
+    const traceId = `AirHacks-${Date.now()}`;
+
+    const response = await fetch(
+      `${API_BASE_URL}/catalog/search/catalogproductofferings`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.DUFFEL_ACCESS_TOKEN}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
           Accept: "application/json",
-          "Duffel-Version": "v2",
+          "TVP-PCC-Core": pcc,
+          TraceId: traceId,
         },
-        body: JSON.stringify({
-          data: {
-            slices,
-            passengers: Array.from(
-              { length: passengerCount },
-              () => ({ type: "adult" })
-            ),
-            cabin_class: cabinClass,
-          },
-        }),
+        body: JSON.stringify(requestBody),
       }
     );
 
-    const result = await duffelResponse.json();
+    const responseText = await response.text();
+    let data;
 
-    if (!duffelResponse.ok) {
-      console.error("Duffel API error:", result);
-      return res.status(duffelResponse.status).json({
-        error:
-          result.errors?.[0]?.message ||
-          "Duffel could not complete the flight search.",
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      data = { rawResponse: responseText };
+    }
+
+    // Return detailed provider errors for troubleshooting.
+    if (!response.ok) {
+      console.error(
+        "Travelport search failed:",
+        JSON.stringify(
+          {
+            status: response.status,
+            traceId,
+            response: data,
+          },
+          null,
+          2
+        )
+      );
+
+      const apiResult =
+        data?.CatalogProductOfferingsResponse?.Result ??
+        data?.Result;
+
+      const errors = apiResult?.Error;
+      const firstError = Array.isArray(errors) ? errors[0] : errors;
+
+      const errorMessage =
+        firstError?.Message ||
+        firstError?.message ||
+        firstError?.description ||
+        data?.message ||
+        `Travelport search failed with HTTP ${response.status}.`;
+
+      return res.status(response.status).json({
+        error: errorMessage,
+        provider: "Travelport",
+        traceId,
+        details: apiResult || data,
       });
     }
 
-    const offers = result.data?.offers || [];
-
-    console.log("Duffel live mode:", result.data?.live_mode);
-
-    console.log(
-  "Duffel live mode:",
-  result.data?.live_mode
-);
-
-console.log(
-  "Airlines returned:",
-  offers.map((offer) => ({
-    owner: offer.owner?.name,
-    segments: offer.slices?.flatMap((slice) =>
-      slice.segments.map((segment) => ({
-        operating: segment.operating_carrier?.name,
-        marketing: segment.marketing_carrier?.name,
-      }))
-    ),
-  }))
-);
-
     return res.json({
-      offers,
-      count: offers.length,
-      liveMode: result.data?.live_mode ?? false,
+      provider: "Travelport",
+      traceId,
+      data,
     });
   } catch (error) {
-    console.error("Flight search error:", error);
+    console.error("Flight search error:", error.message);
+
+    const isConfigurationError = error.message.startsWith(
+      "Missing Travelport environment variables:"
+    );
+
     return res.status(500).json({
-      error: "Unable to search flights right now. Please try again.",
+      error:
+        isConfigurationError ||
+        error.message === "Travelport authentication failed."
+          ? error.message
+          : "Unable to search flights right now. Check the backend terminal.",
     });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Backend running at http://localhost:${PORT}`);
+  console.log(
+    `AirHacks Travelport backend running at http://localhost:${PORT}`
+  );
 });
