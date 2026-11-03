@@ -1,9 +1,247 @@
+
 import { useState } from "react";
 import { useFlightSearch } from "./useFlightSearch";
+
 import "./Search_flights.css";
 import "./Search_flights-mobile.css";
 
-export default function Search_flights() {
+function todayLocal() {
+  const now = new Date();
+
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+function displayTime(value) {
+  if (
+    typeof value !== "string" ||
+    !/^\d{2}:\d{2}/.test(value)
+  ) {
+    return "--:--";
+  }
+
+  const hour = Number(value.slice(0, 2));
+
+  return `${hour % 12 || 12}:${value.slice(3, 5)} ${
+    hour >= 12 ? "PM" : "AM"
+  }`;
+}
+
+function displayDate(value) {
+  if (
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(value)
+  ) {
+    return "";
+  }
+
+  return new Date(`${value}T00:00:00Z`).toLocaleDateString(
+    "en-US",
+    {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    }
+  );
+}
+
+function displayDuration(minutes) {
+  if (
+    minutes == null ||
+    !Number.isFinite(Number(minutes))
+  ) {
+    return "Duration unavailable";
+  }
+
+  const total = Number(minutes);
+
+  return `${Math.floor(total / 60)}h ${total % 60}m`;
+}
+
+function displayPrice(amount) {
+  if (
+    amount == null ||
+    !Number.isFinite(Number(amount))
+  ) {
+    return "Price unavailable";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(Number(amount));
+}
+
+function FlightLeg({ slice, label }) {
+  const flights = slice.segments || [];
+
+  const airlineNames = [
+    ...new Set(
+      flights
+        .map((flight) => flight.airline_name)
+        .filter(Boolean)
+    ),
+  ];
+
+  const flightNumbers = flights
+    .map((flight) => flight.flight_number)
+    .filter(Boolean);
+
+  const stops = slice.stop_count;
+
+  return (
+    <div className="flight-leg">
+      <p className="flight-leg-label">
+        <strong>{label}</strong>
+      </p>
+
+      <div className="flight-result-route">
+        <div>
+          <strong>
+            {displayTime(slice.departure?.time)}
+          </strong>
+
+          <span>{slice.departure?.code || "—"}</span>
+          <small>{displayDate(slice.departure?.date)}</small>
+        </div>
+
+        <div className="flight-result-duration">
+          <span>
+            {stops == null
+              ? "Stops unavailable"
+              : stops === 0
+                ? "Nonstop"
+                : `${stops} ${
+                    stops === 1 ? "stop" : "stops"
+                  }`}
+          </span>
+
+          <span>
+            {displayDuration(slice.duration_minutes)}
+          </span>
+        </div>
+
+        <div>
+          <strong>
+            {displayTime(slice.arrival?.time)}
+          </strong>
+
+          <span>{slice.arrival?.code || "—"}</span>
+          <small>{displayDate(slice.arrival?.date)}</small>
+        </div>
+      </div>
+
+      {(airlineNames.length > 0 ||
+        flightNumbers.length > 0) && (
+        <p className="flight-results-message">
+          {airlineNames.join(", ")}
+          {flightNumbers.length > 0
+            ? ` · ${flightNumbers.join(" / ")}`
+            : ""}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function BookingOptions({ options }) {
+  if (!options?.length) {
+    return (
+      <p>
+        Booking links were not provided for this itinerary.
+      </p>
+    );
+  }
+
+  return (
+    <div className="flight-booking-options">
+      <strong>Compare booking providers</strong>
+
+      {options.map((option, index) => (
+        <div
+          className="flight-booking-option"
+          key={`${option.provider}-${index}`}
+        >
+          <p>
+            {option.provider} · {displayPrice(option.price)}
+            {option.isSplit ? " · Separate tickets" : ""}
+          </p>
+
+          {option.isSplit ? (
+            <div>
+              <small>
+                Outbound and return tickets must be booked
+                separately. Check both fares before purchasing.
+              </small>
+
+              <div>
+                {option.departure?.bookingUrl ? (
+                  <a
+                    href={option.departure.bookingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Book outbound with{" "}
+                    {option.departure.provider} (
+                    {displayPrice(option.departure.price)})
+                  </a>
+                ) : (
+                  <span>
+                    Outbound booking link unavailable.
+                  </span>
+                )}
+              </div>
+
+              <div>
+                {option.arrival?.bookingUrl ? (
+                  <a
+                    href={option.arrival.bookingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Book return with{" "}
+                    {option.arrival.provider} (
+                    {displayPrice(option.arrival.price)})
+                  </a>
+                ) : (
+                  <span>
+                    Return booking link unavailable.
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : option.bookingUrl ? (
+            <a
+              href={option.bookingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View fare at {option.provider}
+            </a>
+          ) : (
+            <span>Direct booking link unavailable.</span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function SearchFlights() {
+  const [tripType, setTripType] = useState("round-trip");
+
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
+
+  const [departureDate, setDepartureDate] = useState("");
+  const [returnDate, setReturnDate] = useState("");
+
+  const [adults, setAdults] = useState("1");
+  const [cabinClass, setCabinClass] = useState("economy");
+  const [lastSearch, setLastSearch] = useState(null);
+
   const {
     offers,
     loading,
@@ -11,282 +249,338 @@ export default function Search_flights() {
     searchFlights,
   } = useFlightSearch();
 
-  const [form, setForm] = useState({
-    origin: "",
-    destination: "",
-    departureDate: "",
-    adults: 1,
-    children: 0,
-    infants: 0,
-    cabinClass: "Economy",
-    currency: "USD",
-  });
-
-  const [searched, setSearched] = useState(false);
-
-  function handleChange(event) {
-    const { name, value } = event.target;
-
-    setForm((previous) => ({
-      ...previous,
-      [name]: ["adults", "children", "infants"].includes(name)
-        ? Number(value)
-        : value,
-    }));
-  }
-
-  async function handleSubmit(event) {
+  async function handleSearch(event) {
     event.preventDefault();
-    setSearched(true);
 
-    await searchFlights({
-      ...form,
-      origin: form.origin.trim().toUpperCase(),
-      destination: form.destination.trim().toUpperCase(),
-    });
-  }
+    const from = origin.trim().toUpperCase();
+    const to = destination.trim().toUpperCase();
 
-  function getOfferPrice(offer) {
-    if (typeof offer.price === "number") {
-      return offer.price.toLocaleString(undefined, {
-        style: "currency",
-        currency: offer.currency || form.currency,
-      });
+    if (
+      !/^[A-Z]{3}$/.test(from) ||
+      !/^[A-Z]{3}$/.test(to)
+    ) {
+      alert(
+        "Enter a three-letter airport or city code such as JFK, LAX, or NYC."
+      );
+      return;
     }
 
-    if (offer.price) {
-      return `${offer.currency || form.currency} ${offer.price}`;
+    if (from === to) {
+      alert("Origin and destination must be different.");
+      return;
     }
 
-    return "Price unavailable";
-  }
-
-  function getOfferSummary(offer) {
-    const itinerary = offer.raw || offer;
-    const segments =
-      itinerary.segments ||
-      itinerary.legs?.[0]?.segments ||
-      itinerary.itineraries?.[0]?.segments ||
-      [];
-
-    if (segments.length > 0) {
-      return segments
-        .map((segment) => {
-          const from =
-            segment.origin?.display_code ||
-            segment.origin?.code ||
-            segment.departure_airport?.id ||
-            segment.departure_airport ||
-            "";
-          const to =
-            segment.destination?.display_code ||
-            segment.destination?.code ||
-            segment.arrival_airport?.id ||
-            segment.arrival_airport ||
-            "";
-          const carrier =
-            segment.marketing_carrier?.name ||
-            segment.airline?.name ||
-            segment.carrier_name ||
-            "";
-
-          return [from && to ? `${from} → ${to}` : "", carrier]
-            .filter(Boolean)
-            .join(" · ");
-        })
-        .filter(Boolean)
-        .join(" | ");
+    if (
+      !departureDate ||
+      (tripType === "round-trip" &&
+        (!returnDate || returnDate < departureDate))
+    ) {
+      alert(
+        "Please enter valid departure and return dates."
+      );
+      return;
     }
 
-    return (
-      itinerary.carrier_name ||
-      itinerary.airline_name ||
-      itinerary.airline ||
-      "Flight details provided by the flight API"
-    );
+    const search = {
+      origin: from,
+      destination: to,
+      departureDate,
+
+      ...(tripType === "round-trip"
+        ? { returnDate }
+        : {}),
+
+      tripType,
+      adults: Number(adults),
+      cabinClass,
+    };
+
+    setLastSearch(search);
+    await searchFlights(search);
   }
 
   return (
-    <main className="flight-search">
-      <h1>Search Flights</h1>
-      <p>Find flight options for your next trip.</p>
-
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="origin">
-          From (airport code)
-          <input
-            id="origin"
-            name="origin"
-            type="text"
-            placeholder="JFK"
-            value={form.origin}
-            onChange={handleChange}
-            maxLength={3}
-            required
-          />
-        </label>
-
-        <label htmlFor="destination">
-          To (airport code)
-          <input
-            id="destination"
-            name="destination"
-            type="text"
-            placeholder="LAX"
-            value={form.destination}
-            onChange={handleChange}
-            maxLength={3}
-            required
-          />
-        </label>
-
-        <label htmlFor="departureDate">
-          Departure date
-          <input
-            id="departureDate"
-            name="departureDate"
-            type="date"
-            min={new Date().toISOString().slice(0, 10)}
-            value={form.departureDate}
-            onChange={handleChange}
-            required
-          />
-        </label>
-
-        <label htmlFor="adults">
-          Adults
-          <select
-            id="adults"
-            name="adults"
-            value={form.adults}
-            onChange={handleChange}
-          >
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => (
-              <option key={number} value={number}>
-                {number}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label htmlFor="children">
-          Children
-          <select
-            id="children"
-            name="children"
-            value={form.children}
-            onChange={handleChange}
-          >
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((number) => (
-              <option key={number} value={number}>
-                {number}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label htmlFor="infants">
-          Infants
-          <select
-            id="infants"
-            name="infants"
-            value={form.infants}
-            onChange={handleChange}
-          >
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((number) => (
-              <option key={number} value={number}>
-                {number}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label htmlFor="cabinClass">
-          Cabin class
-          <select
-            id="cabinClass"
-            name="cabinClass"
-            value={form.cabinClass}
-            onChange={handleChange}
-          >
-            <option value="Economy">Economy</option>
-            <option value="PremiumEconomy">Premium Economy</option>
-            <option value="Business">Business</option>
-            <option value="First">First Class</option>
-          </select>
-        </label>
-
-        <label htmlFor="currency">
-          Currency
-          <select
-            id="currency"
-            name="currency"
-            value={form.currency}
-            onChange={handleChange}
-          >
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="CAD">CAD</option>
-          </select>
-        </label>
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Searching..." : "Search Flights"}
-        </button>
-      </form>
-
-      {error && (
-        <p className="flight-error" role="alert">
-          {error}
+    <section className="search-flights-page">
+      <div className="search-flights-hero">
+        <p className="search-flights-eyebrow">
+          YOUR NEXT ADVENTURE STARTS HERE
         </p>
-      )}
 
-      {loading && <p>Searching for available flights...</p>}
+        <h1>Where will you go next?</h1>
 
-      {!loading && searched && !error && offers.length === 0 && (
-        <p>No flights were returned for this search. Try another date or route.</p>
-      )}
+        <p className="search-flights-intro">
+          Find flights, compare options, and plan
+          your next journey.
+        </p>
+      </div>
 
-      {!loading && offers.length > 0 && (
-        <section className="flight-results">
-          <h2>Flight Results ({offers.length})</h2>
+      <div className="search-flights-card">
+        <div
+          className="trip-type-options"
+          aria-label="Trip type"
+        >
+          <button
+            type="button"
+            className={
+              tripType === "round-trip"
+                ? "trip-option selected"
+                : "trip-option"
+            }
+            onClick={() => setTripType("round-trip")}
+          >
+            Round trip
+          </button>
 
-          {offers.map((offer, index) => (
-            <article
-              className="flight-offer"
-              key={offer.id || `${form.origin}-${form.destination}-${index}`}
+          <button
+            type="button"
+            className={
+              tripType === "one-way"
+                ? "trip-option selected"
+                : "trip-option"
+            }
+            onClick={() => setTripType("one-way")}
+          >
+            One way
+          </button>
+        </div>
+
+        <form
+          className="flight-search-form"
+          onSubmit={handleSearch}
+        >
+          <label className="flight-field">
+            <span>From</span>
+            <input
+              type="text"
+              placeholder="Airport or city code (e.g. JFK)"
+              maxLength={3}
+              value={origin}
+              onChange={(e) => setOrigin(e.target.value)}
+              autoComplete="off"
+              required
+            />
+          </label>
+
+          <label className="flight-field">
+            <span>To</span>
+            <input
+              type="text"
+              placeholder="Airport or city code (e.g. LAX)"
+              maxLength={3}
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              autoComplete="off"
+              required
+            />
+          </label>
+
+          <label className="flight-field">
+            <span>Departure</span>
+            <input
+              type="date"
+              value={departureDate}
+              min={todayLocal()}
+              onChange={(e) =>
+                setDepartureDate(e.target.value)
+              }
+              required
+            />
+          </label>
+
+          {tripType === "round-trip" && (
+            <label className="flight-field">
+              <span>Return</span>
+              <input
+                type="date"
+                value={returnDate}
+                min={departureDate || todayLocal()}
+                onChange={(e) =>
+                  setReturnDate(e.target.value)
+                }
+                required
+              />
+            </label>
+          )}
+
+          <label className="flight-field passenger-field">
+            <span>Adults</span>
+            <select
+              value={adults}
+              onChange={(e) => setAdults(e.target.value)}
             >
-              <div>
-                <h3>Flight option {index + 1}</h3>
-                <p>{getOfferSummary(offer)}</p>
-                <p>
-                  {form.origin} → {form.destination}
-                </p>
-                <p>Departure: {form.departureDate}</p>
-              </div>
+              {Array.from(
+                { length: 8 },
+                (_, i) => i + 1
+              ).map((count) => (
+                <option key={count} value={count}>
+                  {count}{" "}
+                  {count === 1 ? "adult" : "adults"}
+                </option>
+              ))}
+            </select>
+          </label>
 
-              <div>
-                <strong>{getOfferPrice(offer)}</strong>
+          <label className="flight-field">
+            <span>Cabin class</span>
+            <select
+              value={cabinClass}
+              onChange={(e) =>
+                setCabinClass(e.target.value)
+              }
+            >
+              <option value="economy">Economy</option>
+              <option value="premium_economy">
+                Premium Economy
+              </option>
+              <option value="business">Business</option>
+              <option value="first_class">First</option>
+            </select>
+          </label>
 
-                {offer.bookingUrl ? (
-                  <p>
-                    <a
-                      href={offer.bookingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      View booking options
-                    </a>
-                  </p>
-                ) : (
-                  <p>Booking link not provided by the API.</p>
-                )}
-              </div>
-            </article>
-          ))}
-        </section>
-      )}
-    </main>
+          <button
+            className="flight-search-button"
+            type="submit"
+            disabled={loading}
+          >
+            <span aria-hidden="true">⌕</span>{" "}
+            {loading ? "Searching..." : "Search Flights"}
+          </button>
+        </form>
+      </div>
+
+      <div
+        className="flight-results"
+        aria-live="polite"
+      >
+        {loading && (
+          <p className="flight-results-message">
+            Searching for flights...
+          </p>
+        )}
+
+        {!loading && error && (
+          <div
+            className="flight-results-error"
+            role="alert"
+          >
+            <p>{error}</p>
+
+            {lastSearch && (
+              <button
+                type="button"
+                onClick={() =>
+                  searchFlights(lastSearch)
+                }
+              >
+                Try Again
+              </button>
+            )}
+          </div>
+        )}
+
+        {!loading && !error && offers.length > 0 && (
+          <>
+            <h2>
+              Available Flights ({offers.length})
+            </h2>
+
+            <p className="flight-results-message">
+              USD totals for all selected adults.
+              Departure and arrival times are local
+              to each airport.
+            </p>
+
+            <div className="flight-results-list">
+              {offers.map((offer, index) => {
+                const firstFlight =
+                  offer.slices?.[0]?.segments?.[0];
+
+                return (
+                  <article
+                    className="flight-result-card"
+                    key={`${offer.id}-${index}`}
+                  >
+                    <div className="flight-result-airline">
+                      {firstFlight?.airline_logo && (
+                        <img
+                          src={firstFlight.airline_logo}
+                          alt=""
+                          width="40"
+                          height="40"
+                        />
+                      )}
+
+                      <strong>
+                        {firstFlight?.airline_name ||
+                          "Airline details unavailable"}
+                      </strong>
+                    </div>
+
+                    {offer.slices?.length ? (
+                      offer.slices.map(
+                        (slice, sliceIndex) => (
+                          <FlightLeg
+                            key={slice.id}
+                            slice={slice}
+                            label={
+                              sliceIndex === 0
+                                ? "Outbound"
+                                : "Return"
+                            }
+                          />
+                        )
+                      )
+                    ) : (
+                      <p>
+                        Detailed flight legs unavailable.
+                      </p>
+                    )}
+
+                    <div className="flight-result-price">
+                      <strong>
+                        From{" "}
+                        {displayPrice(offer.total_amount)}
+                      </strong>
+
+                      <span>
+                        Total quoted price
+                      </span>
+                    </div>
+
+                    <BookingOptions
+                      options={offer.booking_options}
+                    />
+                  </article>
+                );
+              })}
+            </div>
+
+            <p className="flight-results-message">
+              Prices and availability can change at
+              the booking provider. Confirm the final
+              fare and fees before purchase.
+            </p>
+          </>
+        )}
+
+        {!loading &&
+          !error &&
+          offers.length === 0 && (
+            <p className="flight-results-message">
+              {lastSearch
+                ? "No flight offers were returned for this search. Try another route or date."
+                : "Enter your trip details above to find available flights."}
+            </p>
+          )}
+      </div>
+
+      <div className="search-flights-note">
+        <span aria-hidden="true">✈</span>
+        <p>
+          Choose your destinations and dates
+          to get started.
+        </p>
+      </div>
+    </section>
   );
 }
