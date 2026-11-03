@@ -377,3 +377,473 @@
     animation: none !important;
   }
 }
+
+
+/* =========================================
+   AIRHACKS — LIVE FLIGHT DEALS
+========================================= */
+
+.discount-flights-page {
+  background: #f5f9fd;
+  min-height: 100vh;
+}
+
+.discount-deals-search,
+.discount-deals-results {
+  width: min(1160px, calc(100% - 40px));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.discount-deals-search {
+  margin-top: 38px;
+  padding: 30px;
+  background: #fff;
+  border: 1px solid #dce8f2;
+  border-radius: 18px;
+  box-shadow: 0 10px 35px rgba(18, 46, 74, 0.06);
+}
+
+.discount-deals-search-header h2,
+.discount-deals-results-heading h2 {
+  margin: 0 0 9px;
+  color: #132c46;
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+}
+
+.discount-deals-search-header p,
+.discount-deals-results-heading p {
+  margin: 0;
+  color: #62788e;
+  line-height: 1.6;
+}
+
+.discount-deals-form {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr auto;
+  gap: 18px;
+  align-items: end;
+  margin-top: 25px;
+}
+
+.discount-deals-form label,
+.discount-deals-toolbar > label:not(.discount-deals-checkbox) {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.discount-deals-form label > span,
+.discount-deals-toolbar label > span {
+  color: #284761;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.discount-deals-form select,
+.discount-deals-toolbar select {
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  padding: 0 13px;
+  border: 1px solid #d5e2ed;
+  border-radius: 10px;
+  background: #fff;
+  color: #18324a;
+  font-size: 0.92rem;
+}
+
+.discount-deals-form select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.discount-deals-form button,
+.discount-deals-status button {
+  min-height: 50px;
+  padding: 12px 23px;
+  border: 0;
+  border-radius: 10px;
+  background: #1478c9;
+  color: #fff;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.discount-deals-form button:hover:not(:disabled),
+.discount-deals-status button:hover {
+  background: #0864b0;
+}
+
+.discount-deals-form button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+/* Results heading */
+
+.discount-deals-results {
+  margin-top: 42px;
+  padding-bottom: 65px;
+}
+
+.discount-deals-results-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 23px;
+}
+
+.discount-deals-kicker {
+  color: #1478c9 !important;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  margin-bottom: 8px !important;
+}
+
+.discount-deals-count {
+  padding: 9px 14px;
+  border-radius: 100px;
+  background: #e5f1fc;
+  color: #1478c9;
+  font-size: 0.83rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Filter toolbar */
+
+.discount-deals-toolbar {
+  display: flex;
+  align-items: end;
+  gap: 26px;
+  margin-bottom: 25px;
+}
+
+.discount-deals-toolbar > label:first-child {
+  width: min(270px, 100%);
+}
+
+.discount-deals-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  color: #284761;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.discount-deals-checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: #1478c9;
+}
+
+/* Card layout */
+
+.discount-deals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 23px;
+  align-items: stretch;
+}
+
+.discount-deal-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #dce8f2;
+  border-radius: 17px;
+  box-shadow: 0 9px 30px rgba(15, 43, 70, 0.06);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.discount-deal-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(15, 43, 70, 0.11);
+}
+
+/* Destination images */
+
+.discount-deal-image {
+  position: relative;
+  height: 195px;
+  background: linear-gradient(
+    135deg,
+    #1d83c9,
+    #102d4a
+  );
+  overflow: hidden;
+}
+
+.discount-deal-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.discount-deal-image-fallback {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 3.5rem;
+}
+
+.discount-deal-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #127b67;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 800;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+/* Card content */
+
+.discount-deal-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 16px;
+  padding: 21px;
+}
+
+.discount-deal-location {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.discount-deal-country {
+  margin: 0 0 5px;
+  color: #1478c9;
+  font-size: 0.73rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.discount-deal-location h3 {
+  margin: 0;
+  color: #122c46;
+  font-size: 1.35rem;
+  line-height: 1.3;
+}
+
+.discount-deal-airport-code {
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: #edf5fc;
+  color: #1478c9;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.discount-deal-description {
+  margin: 0;
+  color: #667d91;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.discount-deal-route {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: 9px;
+  background: #edf6ff;
+  color: #164d7f;
+  font-weight: 800;
+}
+
+.discount-deal-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.discount-deal-details > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.discount-deal-detail-label {
+  font-size: 0.76rem;
+  color: #718397;
+}
+
+.discount-deal-details strong {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #1a344d;
+  overflow-wrap: anywhere;
+}
+
+.discount-deal-duration {
+  margin: 0;
+  color: #667d91;
+  font-size: 0.8rem;
+}
+
+/* Price summary */
+
+.discount-deal-price-box {
+  margin-top: auto;
+  padding: 16px;
+  border: 1px solid #dcebf7;
+  border-radius: 11px;
+  background: #f0f7fe;
+}
+
+.discount-deal-price-header,
+.discount-deal-typical {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.discount-deal-price-header span {
+  color: #294f70;
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+
+.discount-deal-price-header strong {
+  color: #106da9;
+  font-size: 1.65rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.discount-deal-typical {
+  margin-top: 10px;
+  color: #698095;
+  font-size: 0.83rem;
+}
+
+.discount-deal-savings {
+  margin: 12px 0 0;
+  color: #117d64;
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+/* Booking CTA */
+
+.discount-deal-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 47px;
+  padding: 12px 16px;
+  border-radius: 9px;
+  background: #1478c9;
+  color: white;
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 800;
+  transition: background 0.2s ease;
+}
+
+.discount-deal-button:hover {
+  background: #0864b0;
+  color: #fff;
+}
+
+.discount-deal-unavailable {
+  margin: 0;
+  color: #708397;
+  font-size: 0.85rem;
+}
+
+/* Loading and empty state */
+
+.discount-deals-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  gap: 13px;
+  min-height: 250px;
+  padding: 35px 20px;
+  border: 1px solid #dce8f2;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.discount-deals-status h3,
+.discount-deals-status p {
+  margin: 0;
+}
+
+.discount-deals-status h3 {
+  color: #122c46;
+}
+
+.discount-deals-status p {
+  color: #708397;
+  line-height: 1.5;
+}
+
+.discount-deals-spinner {
+  width: 35px;
+  height: 35px;
+  border: 4px solid #d7eafa;
+  border-top-color: #1478c9;
+  border-radius: 50%;
+  animation: discount-spin 0.8s linear infinite;
+}
+
+@keyframes discount-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.discount-deals-disclaimer {
+  margin: 27px 0 0;
+  color: #718397;
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 1050px) {
+  .discount-deals-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discount-deal-card,
+  .discount-deal-button {
+    transition: none;
+  }
+
+  .discount-deals-spinner {
+    animation: none;
+  }
+}

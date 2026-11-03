@@ -91,7 +91,7 @@ function normalizeItineraries(data) {
 
       duration_minutes:
         leg.total_duration != null &&
-        Number.isFinite(Number(leg.total_duration))
+          Number.isFinite(Number(leg.total_duration))
           ? Number(leg.total_duration)
           : null,
 
@@ -391,6 +391,273 @@ app.post("/api/flights/search", async (req, res) => {
     });
   }
 });
+
+
+/* =========================================
+   AIRHACKS — GOOGLE FLIGHTS DEALS
+   Add before the app.listen section.
+========================================= */
+
+const DEALS_CACHE_MS = 60 * 60 * 1000;
+const dealsCache = new Map();
+const pendingDealRequests = new Map();
+
+function validDealPrice(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const number = Number(value);
+
+  return Number.isFinite(number) && number > 0
+    ? number
+    : null;
+}
+
+function safeDealUrl(value) {
+  if (typeof value !== "string") return null;
+
+  try {
+    const url = new URL(value);
+
+    if (
+      url.protocol !== "https:" ||
+      !["google.com", "www.google.com"].includes(
+        url.hostname
+      ) ||
+      !url.pathname.startsWith("/travel/flights")
+    ) {
+      return null;
+    }
+
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+function safeDealImage(value) {
+  if (typeof value !== "string") return null;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeFlightDeal(deal) {
+  const price = validDealPrice(deal?.price);
+  const destination = deal?.destination;
+
+  if (!price || !destination?.name) {
+    return null;
+  }
+
+  const typicalPrice = validDealPrice(deal.typical_price);
+
+  const savingsAmount =
+    typicalPrice !== null && typicalPrice > price
+      ? Math.max(0, typicalPrice - price)
+      : null;
+
+  const suppliedPercent = Number(
+    deal.savings_percentage
+  );
+
+  const savingsPercentage =
+    savingsAmount !== null
+      ? Number.isFinite(suppliedPercent) &&
+        suppliedPercent > 0 &&
+        suppliedPercent < 100
+        ? suppliedPercent
+        : Math.round(
+          (savingsAmount / typicalPrice) * 100
+        )
+      : null;
+
+  return {
+    id: String(
+      deal.position ??
+      `${destination.name}-${deal.outbound_date}`
+    ),
+
+    destination: destination.name,
+    country: destination.country || "",
+    destinationCode: destination.airport_code || "",
+    destinationImage: safeDealImage(destination.image),
+    description: destination.description || "",
+    tagline: destination.tagline || "",
+
+    originCode: deal.origin?.airport_code || "",
+
+    outboundDate: deal.outbound_date || null,
+    returnDate: deal.return_date || null,
+
+    tripLengthDays:
+      Number.isInteger(deal.trip_length_days)
+        ? deal.trip_length_days
+        : null,
+
+    price,
+    typicalPrice,
+    savingsAmount,
+    savingsPercentage,
+
+    airline: deal.airline || "Airline unavailable",
+    airlineCode: deal.airline_code || "",
+
+    stops:
+      Number.isInteger(deal.stops)
+        ? deal.stops
+        : null,
+
+    duration: deal.flight_duration || "",
+
+    isRoundTrip: Boolean(deal.is_round_trip),
+    bookingUrl: safeDealUrl(deal.booking_link),
+  };
+}
+
+async function requestFlightDeals(origin) {
+  const params = new URLSearchParams({
+    engine: "google_flights_deals",
+    departure_id: origin,
+    flight_type: "round_trip",
+    travel_class: "economy",
+    currency: "USD",
+    hl: "en-US",
+    gl: "US",
+  });
+
+  const response = await fetch(
+    `https://www.searchapi.io/api/v1/search?${params}`,
+    {
+      headers: {
+        Authorization:
+          `Bearer ${process.env.SEARCHAPI_API_KEY}`,
+        Accept: "application/json",
+      },
+      signal: AbortSignal.timeout(60000),
+    }
+  );
+
+  const data = await response.json().catch(() => null);
+
+  if (
+    !response.ok ||
+    data?.error ||
+    data?.errors
+  ) {
+    const error = new Error(
+      response.status === 429
+        ? "Flight deals provider rate limit reached."
+        : "Could not retrieve flight deals from SearchAPI."
+    );
+
+    error.status = response.status === 429 ? 429 : 502;
+    throw error;
+  }
+
+  if (!Array.isArray(data?.deals)) {
+    const error = new Error(
+      "The flight deals provider returned an unexpected response."
+    );
+
+    error.status = 502;
+    throw error;
+  }
+
+  const deals = data.deals
+    .map(normalizeFlightDeal)
+    .filter(Boolean);
+
+  const payload = {
+    origin,
+    currency: "USD",
+    tripType: "round-trip",
+    passengers: 1,
+    fetchedAt: new Date().toISOString(),
+    deals,
+    count: deals.length,
+  };
+
+  // Keep a small cache of departure airports.
+  if (dealsCache.size >= 40) {
+    dealsCache.delete(
+      dealsCache.keys().next().value
+    );
+  }
+
+  dealsCache.set(origin, {
+    expiresAt: Date.now() + DEALS_CACHE_MS,
+    payload,
+  });
+
+  return payload;
+}
+
+app.get("/api/flights/deals", async (req, res) => {
+  const origin =
+    typeof req.query.origin === "string"
+      ? req.query.origin.trim().toUpperCase()
+      : "JFK";
+
+  if (!/^[A-Z]{3}$/.test(origin)) {
+    return res.status(400).json({
+      error: "Select a valid departure airport.",
+    });
+  }
+
+  if (!process.env.SEARCHAPI_API_KEY) {
+    return res.status(503).json({
+      error: "SearchAPI key is not configured.",
+    });
+  }
+
+  const cached = dealsCache.get(origin);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return res.json({
+      ...cached.payload,
+      cached: true,
+    });
+  }
+
+  try {
+    // Share one upstream request when multiple
+    // visitors request the same airport at once.
+    if (!pendingDealRequests.has(origin)) {
+      const pending = requestFlightDeals(origin)
+        .finally(() => {
+          pendingDealRequests.delete(origin);
+        });
+
+      pendingDealRequests.set(origin, pending);
+    }
+
+    const payload = await pendingDealRequests.get(origin);
+
+    return res.json({
+      ...payload,
+      cached: false,
+    });
+  } catch (error) {
+    console.error(
+      "Flight deals request failed:",
+      error.message
+    );
+
+    return res.status(error.status || 502).json({
+      error:
+        error.status === 429
+          ? "Too many requests to the flight deals provider. Try again later."
+          : "Flight deals are temporarily unavailable. Please try again.",
+    });
+  }
+});
+
 
 if (require.main === module) {
   app.listen(PORT, () => {

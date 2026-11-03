@@ -361,3 +361,77 @@
   }
 }
 
+
+
+/* =========================================
+   ADVANCED FILTERS — MOBILE
+========================================= */
+
+@media (max-width: 700px) {
+  .flight-filters-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+
+  .flight-filters-grid .flight-price-filter {
+    grid-column: auto;
+  }
+
+  .flight-price-filter-heading {
+    gap: 8px;
+  }
+
+  .flight-price-filter-heading span {
+    font-size: 1rem;
+  }
+
+  .flight-dual-range {
+    height: 40px;
+    margin: 8px 0;
+  }
+
+  .flight-dual-range-track,
+  .flight-dual-range-active {
+    top: 17px;
+  }
+
+  .flight-price-filter .flight-dual-range input[type="range"] {
+    height: 40px;
+    min-height: 0;
+  }
+
+  .flight-dual-range input[type="range"]::-webkit-slider-thumb {
+    width: 26px;
+    height: 26px;
+  }
+
+  .flight-dual-range input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+  }
+
+  .flight-price-range {
+    font-size: 0.78rem;
+  }
+
+  .flight-fare-warning {
+    padding: 13px 14px;
+    font-size: 0.81rem;
+  }
+}
+
+
+@media (max-width: 700px) {
+  .flight-search-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .flight-airport-picker {
+    padding: 15px;
+    gap: 15px;
+  }
+
+  .flight-search-form > .flight-search-button {
+    grid-column: auto;
+  }
+}

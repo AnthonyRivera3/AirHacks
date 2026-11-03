@@ -1,13 +1,13 @@
 
 import { useMemo, useState } from "react";
+import FlightAirportPicker from "./FlightAirportPicker";
 import { useFlightSearch } from "./useFlightSearch";
-
 import "./Search_flights.css";
 import "./Search_flights-mobile.css";
 
-// --------------------------
-// Formatting helpers
-// --------------------------
+// ========================================
+// FORMATTING HELPERS
+// ========================================
 
 function todayLocal() {
   const now = new Date();
@@ -17,22 +17,45 @@ function todayLocal() {
   return `${now.getFullYear()}-${month}-${day}`;
 }
 
-function displayTime(value) {
-  if (
-    typeof value !== "string" ||
-    !/^\d{2}:\d{2}/.test(value)
-  ) {
-    return "--:--";
+function priceNumber(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
   }
 
-  const hour = Number(value.slice(0, 2));
+  const number = Number(value);
 
-  return `${hour % 12 || 12}:${value.slice(3, 5)} ${
+  return Number.isFinite(number) && number > 0
+    ? number
+    : null;
+}
+
+function formatPrice(value) {
+  const amount = priceNumber(value);
+
+  if (amount === null) return "Price unavailable";
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amount);
+}
+
+function formatTime(value) {
+  const match =
+    typeof value === "string"
+      ? value.match(/^(\d{2}):(\d{2})/)
+      : null;
+
+  if (!match) return "--:--";
+
+  const hour = Number(match[1]);
+
+  return `${hour % 12 || 12}:${match[2]} ${
     hour >= 12 ? "PM" : "AM"
   }`;
 }
 
-function displayDate(value) {
+function formatDate(value) {
   if (
     typeof value !== "string" ||
     !/^\d{4}-\d{2}-\d{2}$/.test(value)
@@ -50,77 +73,101 @@ function displayDate(value) {
   );
 }
 
-function displayDuration(minutes) {
-  if (
-    minutes == null ||
-    !Number.isFinite(Number(minutes))
-  ) {
+function formatDuration(value) {
+  if (value == null || !Number.isFinite(Number(value))) {
     return "Duration unavailable";
   }
 
-  const total = Number(minutes);
+  const minutes = Math.round(Number(value));
 
-  return `${Math.floor(total / 60)}h ${Math.round(total % 60)}m`;
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 }
 
-function displayPrice(amount) {
-  if (
-    amount == null ||
-    !Number.isFinite(Number(amount))
-  ) {
-    return "Price unavailable";
+// ========================================
+// FLIGHT DATA HELPERS
+// ========================================
+
+function isBookable(option) {
+  if (!option || priceNumber(option.price) === null) {
+    return false;
   }
 
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(Number(amount));
+  if (option.isSplit) {
+    return Boolean(
+      option.departure?.bookingUrl &&
+      option.arrival?.bookingUrl
+    );
+  }
+
+  return Boolean(option.bookingUrl);
 }
 
-function numericPrice(offer) {
-  const value = offer?.total_amount;
+function cheapestLinkedFare(offer) {
+  const prices = (offer.booking_options || [])
+    .filter(isBookable)
+    .map((option) => priceNumber(option.price))
+    .filter((price) => price !== null);
 
-  if (value == null || value === "") return null;
-
-  const amount = Number(value);
-
-  return Number.isFinite(amount) && amount >= 0
-    ? amount
-    : null;
+  return prices.length ? Math.min(...prices) : null;
 }
 
-function getOfferAirlines(offer) {
-  return (offer.slices || []).flatMap((slice) =>
-    (slice.segments || [])
-      .map((flight) => flight.airline_name)
-      .filter(
-        (name) =>
-          typeof name === "string" && name.trim()
+function offerAirlines(offer) {
+  return [
+    ...new Set(
+      (offer.slices || []).flatMap((slice) =>
+        (slice.segments || [])
+          .map((segment) => segment.airline_name)
+          .filter(
+            (name) =>
+              typeof name === "string" && name.trim()
+          )
+          .map((name) => name.trim())
       )
-      .map((name) => name.trim())
-  );
+    ),
+  ];
 }
 
-// --------------------------
-// Flight route
-// --------------------------
+function legStops(slice) {
+  if (Number.isInteger(slice.stop_count)) {
+    return slice.stop_count;
+  }
+
+  const segments = slice.segments || [];
+
+  return segments.length ? segments.length - 1 : null;
+}
+
+function median(values) {
+  if (!values.length) return null;
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+
+  return sorted.length % 2
+    ? sorted[middle]
+    : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+// ========================================
+// FLIGHT LEG COMPONENT
+// ========================================
 
 function FlightLeg({ slice, label }) {
-  const flights = slice.segments || [];
+  const segments = slice.segments || [];
 
-  const airlineNames = [
+  const airlines = [
     ...new Set(
-      flights
-        .map((flight) => flight.airline_name)
+      segments
+        .map((segment) => segment.airline_name)
         .filter(Boolean)
     ),
   ];
 
-  const flightNumbers = flights
-    .map((flight) => flight.flight_number)
+  const flightNumbers = segments
+    .map((segment) => segment.flight_number)
     .filter(Boolean);
 
-  const stops = slice.stop_count;
+  const stops = legStops(slice);
 
   return (
     <div className="flight-leg">
@@ -130,45 +177,33 @@ function FlightLeg({ slice, label }) {
 
       <div className="flight-result-route">
         <div>
-          <strong>
-            {displayTime(slice.departure?.time)}
-          </strong>
+          <strong>{formatTime(slice.departure?.time)}</strong>
           <span>{slice.departure?.code || "—"}</span>
-          <small>
-            {displayDate(slice.departure?.date)}
-          </small>
+          <small>{formatDate(slice.departure?.date)}</small>
         </div>
 
         <div className="flight-result-duration">
           <span>
-            {stops == null
+            {stops === null
               ? "Stops unavailable"
               : stops === 0
                 ? "Nonstop"
-                : `${stops} ${
-                    stops === 1 ? "stop" : "stops"
-                  }`}
+                : `${stops} ${stops === 1 ? "stop" : "stops"}`}
           </span>
-          <span>
-            {displayDuration(slice.duration_minutes)}
-          </span>
+
+          <span>{formatDuration(slice.duration_minutes)}</span>
         </div>
 
         <div>
-          <strong>
-            {displayTime(slice.arrival?.time)}
-          </strong>
+          <strong>{formatTime(slice.arrival?.time)}</strong>
           <span>{slice.arrival?.code || "—"}</span>
-          <small>
-            {displayDate(slice.arrival?.date)}
-          </small>
+          <small>{formatDate(slice.arrival?.date)}</small>
         </div>
       </div>
 
-      {(airlineNames.length > 0 ||
-        flightNumbers.length > 0) && (
+      {(airlines.length > 0 || flightNumbers.length > 0) && (
         <p className="flight-results-message">
-          {airlineNames.join(", ")}
+          {airlines.join(", ")}
           {flightNumbers.length > 0
             ? ` · ${flightNumbers.join(" / ")}`
             : ""}
@@ -178,42 +213,45 @@ function FlightLeg({ slice, label }) {
   );
 }
 
-// --------------------------
-// Booking providers
-// --------------------------
+// ========================================
+// BOOKING OPTIONS COMPONENT
+// ========================================
 
-function BookingOptions({ options }) {
-  if (!options?.length) {
+function BookingOptions({ options = [] }) {
+  if (!options.length) {
     return (
       <p>
-        Booking links were not provided for this
-        itinerary.
+        Booking links were not provided for this itinerary.
       </p>
     );
   }
+
+  const sortedOptions = [...options].sort(
+    (a, b) =>
+      Number(isBookable(b)) - Number(isBookable(a)) ||
+      (priceNumber(a.price) ?? Infinity) -
+        (priceNumber(b.price) ?? Infinity)
+  );
 
   return (
     <div className="flight-booking-options">
       <strong>Compare booking providers</strong>
 
-      {options.map((option, index) => (
+      {sortedOptions.map((option, index) => (
         <div
           className="flight-booking-option"
           key={`${option.provider}-${index}`}
         >
           <p>
-            {option.provider} ·{" "}
-            {displayPrice(option.price)}
-            {option.isSplit
-              ? " · Separate tickets"
-              : ""}
+            {option.provider} · {formatPrice(option.price)}
+            {option.isSplit ? " · Separate tickets" : ""}
           </p>
 
           {option.isSplit ? (
             <div>
               <small>
-                Outbound and return tickets must be
-                booked separately.
+                Outbound and return tickets must be booked
+                separately. Confirm both final fares.
               </small>
 
               <div>
@@ -227,9 +265,7 @@ function BookingOptions({ options }) {
                     {option.departure.provider}
                   </a>
                 ) : (
-                  <span>
-                    Outbound booking link unavailable.
-                  </span>
+                  <span>Outbound booking link unavailable.</span>
                 )}
               </div>
 
@@ -240,13 +276,10 @@ function BookingOptions({ options }) {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Book return with{" "}
-                    {option.arrival.provider}
+                    Book return with {option.arrival.provider}
                   </a>
                 ) : (
-                  <span>
-                    Return booking link unavailable.
-                  </span>
+                  <span>Return booking link unavailable.</span>
                 )}
               </div>
             </div>
@@ -259,9 +292,7 @@ function BookingOptions({ options }) {
               View fare at {option.provider}
             </a>
           ) : (
-            <span>
-              Direct booking link unavailable.
-            </span>
+            <span>Direct booking link unavailable.</span>
           )}
         </div>
       ))}
@@ -269,37 +300,26 @@ function BookingOptions({ options }) {
   );
 }
 
-// --------------------------
-// Main search page
-// --------------------------
+// ========================================
+// MAIN SEARCH FLIGHTS PAGE
+// ========================================
 
 export default function SearchFlights() {
-  const [tripType, setTripType] =
-    useState("round-trip");
-
+  // Search form
+  const [tripType, setTripType] = useState("round-trip");
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-
-  const [departureDate, setDepartureDate] =
-    useState("");
-
-  const [returnDate, setReturnDate] =
-    useState("");
-
+  const [departureDate, setDepartureDate] = useState("");
+  const [returnDate, setReturnDate] = useState("");
   const [adults, setAdults] = useState("1");
+  const [cabinClass, setCabinClass] = useState("economy");
+  const [lastSearch, setLastSearch] = useState(null);
 
-  const [cabinClass, setCabinClass] =
-    useState("economy");
-
-  const [lastSearch, setLastSearch] =
-    useState(null);
-
-  // New filter state
-  const [selectedAirline, setSelectedAirline] =
-    useState("all");
-
-  const [maxPriceLimit, setMaxPriceLimit] =
-    useState(null);
+  // Filters
+  const [selectedAirline, setSelectedAirline] = useState("all");
+  const [stopsFilter, setStopsFilter] = useState("all");
+  const [minLimit, setMinLimit] = useState(null);
+  const [maxLimit, setMaxLimit] = useState(null);
 
   const {
     offers,
@@ -308,90 +328,157 @@ export default function SearchFlights() {
     searchFlights,
   } = useFlightSearch();
 
-  // --------------------------
-  // Build airline dropdown
-  // from returned results
-  // --------------------------
+  // ========================================
+  // NORMALIZE PRICES FOR COMPARISON
+  // ========================================
 
-  const availableAirlines = useMemo(() => {
-    const names = offers.flatMap(getOfferAirlines);
+  const pricedOffers = useMemo(
+    () =>
+      offers.map((offer) => {
+        const linkedPrice = cheapestLinkedFare(offer);
+
+        return {
+          ...offer,
+          comparisonPrice:
+            linkedPrice ?? priceNumber(offer.total_amount),
+          hasLinkedFare: linkedPrice !== null,
+        };
+      }),
+    [offers]
+  );
+
+  // ========================================
+  // AVAILABLE AIRLINES
+  // ========================================
+
+  const airlines = useMemo(() => {
+    const names = pricedOffers.flatMap(offerAirlines);
 
     return [...new Set(names)].sort((a, b) =>
       a.localeCompare(b)
     );
-  }, [offers]);
+  }, [pricedOffers]);
 
-  // --------------------------
-  // Calculate price range
-  // from returned results
-  // --------------------------
+  // ========================================
+  // PRICE RANGE
+  // ========================================
 
-  const priceRange = useMemo(() => {
-    const prices = offers
-      .map(numericPrice)
-      .filter((price) => price !== null);
+  const prices = useMemo(
+    () =>
+      pricedOffers
+        .map((offer) => offer.comparisonPrice)
+        .filter((price) => price !== null),
+    [pricedOffers]
+  );
 
-    if (prices.length === 0) return null;
+  const priceBounds = useMemo(
+    () =>
+      prices.length
+        ? {
+            min: Math.min(...prices),
+            max: Math.max(...prices),
+          }
+        : null,
+    [prices]
+  );
 
-    return {
-      min: Math.min(...prices),
-      max: Math.max(...prices),
-    };
-  }, [offers]);
+  const typicalPrice = useMemo(
+    () => median(prices),
+    [prices]
+  );
 
-  // Start the slider at the highest price
-  // so all flights display initially.
-
-  const currentMaxPrice = priceRange
-    ? maxPriceLimit === null
-      ? priceRange.max
-      : Math.min(
-          priceRange.max,
-          Math.max(priceRange.min, maxPriceLimit)
+  const selectedMin = priceBounds
+    ? Math.max(
+        priceBounds.min,
+        Math.min(
+          minLimit ?? priceBounds.min,
+          priceBounds.max
         )
+      )
     : 0;
 
-  // --------------------------
-  // Filter results locally
-  // No additional API requests
-  // --------------------------
+  const selectedMax = priceBounds
+    ? Math.min(
+        priceBounds.max,
+        Math.max(
+          maxLimit ?? priceBounds.max,
+          selectedMin
+        )
+      )
+    : 0;
+
+  const spread = priceBounds
+    ? priceBounds.max - priceBounds.min
+    : 0;
+
+  const minPct = spread
+    ? ((selectedMin - priceBounds.min) / spread) * 100
+    : 0;
+
+  const maxPct = spread
+    ? ((selectedMax - priceBounds.min) / spread) * 100
+    : 100;
+
+  // ========================================
+  // FILTER AND SORT FLIGHTS
+  // ========================================
 
   const filteredOffers = useMemo(() => {
-    return offers.filter((offer) => {
-      const airlines = getOfferAirlines(offer);
+    return pricedOffers
+      .filter((offer) => {
+        const airlineMatch =
+          selectedAirline === "all" ||
+          offerAirlines(offer).includes(selectedAirline);
 
-      const matchesAirline =
-        selectedAirline === "all" ||
-        airlines.some(
-          (name) =>
-            name.toLowerCase() ===
-            selectedAirline.toLowerCase()
-        );
+        const legs = offer.slices || [];
 
-      const price = numericPrice(offer);
+        const stopsMatch =
+          stopsFilter === "all" ||
+          (legs.length > 0 &&
+            legs.every((slice) => {
+              const stops = legStops(slice);
 
-      const matchesPrice =
-        maxPriceLimit === null ||
-        (price !== null &&
-          price <= currentMaxPrice + 0.001);
+              if (stops === null) return false;
+              if (stopsFilter === "nonstop") return stops === 0;
+              if (stopsFilter === "one") return stops === 1;
+              if (stopsFilter === "two-plus") return stops >= 2;
 
-      return matchesAirline && matchesPrice;
-    });
+              return true;
+            }));
+
+        const priceMatch =
+          offer.comparisonPrice === null
+            ? minLimit === null && maxLimit === null
+            : offer.comparisonPrice >= selectedMin - 0.005 &&
+              offer.comparisonPrice <= selectedMax + 0.005;
+
+        return airlineMatch && stopsMatch && priceMatch;
+      })
+      .sort(
+        (a, b) =>
+          (a.comparisonPrice ?? Infinity) -
+          (b.comparisonPrice ?? Infinity)
+      );
   }, [
-    offers,
+    pricedOffers,
     selectedAirline,
-    maxPriceLimit,
-    currentMaxPrice,
+    stopsFilter,
+    selectedMin,
+    selectedMax,
+    minLimit,
+    maxLimit,
   ]);
 
   function resetFilters() {
     setSelectedAirline("all");
-    setMaxPriceLimit(null);
+    setStopsFilter("all");
+    setMinLimit(null);
+    setMaxLimit(null);
   }
 
-  // --------------------------
-  // Flight search
-  // --------------------------
+  // ========================================
+  // SEARCH SUBMISSION
+  // ========================================
 
   async function handleSearch(event) {
     event.preventDefault();
@@ -399,30 +486,35 @@ export default function SearchFlights() {
     const from = origin.trim().toUpperCase();
     const to = destination.trim().toUpperCase();
 
+    // Both values come from FlightAirportPicker.
     if (
       !/^[A-Z]{3}$/.test(from) ||
       !/^[A-Z]{3}$/.test(to)
     ) {
       alert(
-        "Enter a three-letter airport or city code."
+        "Please select a departure state and airport and a destination state and airport."
       );
       return;
     }
 
     if (from === to) {
       alert(
-        "Origin and destination must be different."
+        "Departure and destination airports must be different."
       );
       return;
     }
 
+    if (!departureDate || departureDate < todayLocal()) {
+      alert("Please choose a valid future departure date.");
+      return;
+    }
+
     if (
-      !departureDate ||
-      (tripType === "round-trip" &&
-        (!returnDate || returnDate < departureDate))
+      tripType === "round-trip" &&
+      (!returnDate || returnDate < departureDate)
     ) {
       alert(
-        "Please enter valid departure and return dates."
+        "Please select a return date on or after your departure date."
       );
       return;
     }
@@ -431,11 +523,7 @@ export default function SearchFlights() {
       origin: from,
       destination: to,
       departureDate,
-
-      ...(tripType === "round-trip"
-        ? { returnDate }
-        : {}),
-
+      ...(tripType === "round-trip" ? { returnDate } : {}),
       tripType,
       adults: Number(adults),
       cabinClass,
@@ -443,21 +531,24 @@ export default function SearchFlights() {
 
     resetFilters();
     setLastSearch(search);
-
     await searchFlights(search);
   }
 
-  async function retrySearch() {
+  function retrySearch() {
     if (!lastSearch) return;
 
     resetFilters();
-    await searchFlights(lastSearch);
+    searchFlights(lastSearch);
   }
+
+  // ========================================
+  // JSX PAGE LAYOUT
+  // ========================================
 
   return (
     <section className="search-flights-page">
 
-      {/* Page heading */}
+      {/* Hero */}
 
       <div className="search-flights-hero">
         <p className="search-flights-eyebrow">
@@ -472,9 +563,10 @@ export default function SearchFlights() {
         </p>
       </div>
 
-      {/* Search card */}
+      {/* Search Card */}
 
       <div className="search-flights-card">
+
         <div
           className="trip-type-options"
           aria-label="Trip type"
@@ -508,37 +600,24 @@ export default function SearchFlights() {
           className="flight-search-form"
           onSubmit={handleSearch}
         >
-          <label className="flight-field">
-            <span>From</span>
 
-            <input
-              type="text"
-              placeholder="Airport code (JFK)"
-              maxLength={3}
-              value={origin}
-              onChange={(event) =>
-                setOrigin(event.target.value)
-              }
-              autoComplete="off"
-              required
-            />
-          </label>
+          {/* NEW: Departure state and airport */}
 
-          <label className="flight-field">
-            <span>To</span>
+          <FlightAirportPicker
+            label="From"
+            value={origin}
+            onChange={setOrigin}
+          />
 
-            <input
-              type="text"
-              placeholder="Airport code (LAX)"
-              maxLength={3}
-              value={destination}
-              onChange={(event) =>
-                setDestination(event.target.value)
-              }
-              autoComplete="off"
-              required
-            />
-          </label>
+          {/* NEW: Destination state and airport */}
+
+          <FlightAirportPicker
+            label="To"
+            value={destination}
+            onChange={setDestination}
+          />
+
+          {/* Departure Date */}
 
           <label className="flight-field">
             <span>Departure</span>
@@ -553,6 +632,8 @@ export default function SearchFlights() {
               required
             />
           </label>
+
+          {/* Return Date */}
 
           {tripType === "round-trip" && (
             <label className="flight-field">
@@ -570,6 +651,8 @@ export default function SearchFlights() {
             </label>
           )}
 
+          {/* Adults */}
+
           <label className="flight-field passenger-field">
             <span>Adults</span>
 
@@ -583,16 +666,14 @@ export default function SearchFlights() {
                 { length: 8 },
                 (_, index) => index + 1
               ).map((count) => (
-                <option
-                  key={count}
-                  value={count}
-                >
-                  {count}{" "}
-                  {count === 1 ? "adult" : "adults"}
+                <option key={count} value={count}>
+                  {count} {count === 1 ? "adult" : "adults"}
                 </option>
               ))}
             </select>
           </label>
+
+          {/* Cabin Class */}
 
           <label className="flight-field">
             <span>Cabin class</span>
@@ -603,36 +684,31 @@ export default function SearchFlights() {
                 setCabinClass(event.target.value)
               }
             >
-              <option value="economy">
-                Economy
-              </option>
-
+              <option value="economy">Economy</option>
               <option value="premium_economy">
                 Premium Economy
               </option>
-
-              <option value="business">
-                Business
-              </option>
-
-              <option value="first_class">
-                First
-              </option>
+              <option value="business">Business</option>
+              <option value="first_class">First</option>
             </select>
           </label>
+
+          {/* Search Button */}
 
           <button
             className="flight-search-button"
             type="submit"
             disabled={loading}
           >
-            <span aria-hidden="true">⌕</span>
+            <span aria-hidden="true">⌕</span>{" "}
             {loading ? "Searching..." : "Search Flights"}
           </button>
         </form>
       </div>
 
-      {/* Results */}
+      {/* =====================================
+          FLIGHT RESULTS
+      ===================================== */}
 
       <div
         className="flight-results"
@@ -662,8 +738,6 @@ export default function SearchFlights() {
           </div>
         )}
 
-        {/* Filters appear after flights load */}
-
         {!loading && !error && offers.length > 0 && (
           <>
             <div className="flight-results-heading">
@@ -672,18 +746,24 @@ export default function SearchFlights() {
 
                 <p>
                   Showing {filteredOffers.length} of{" "}
-                  {offers.length} flight options
+                  {offers.length} options · Lowest price first
                 </p>
               </div>
             </div>
 
+            {/* =====================================
+                FILTER PANEL
+            ===================================== */}
+
             <div className="flight-filters">
+
               <div className="flight-filters-heading">
                 <div>
                   <h3>Filter flights</h3>
 
                   <p>
-                    Narrow results by airline and budget.
+                    Change filters without making
+                    another API request.
                   </p>
                 </div>
 
@@ -698,7 +778,7 @@ export default function SearchFlights() {
 
               <div className="flight-filters-grid">
 
-                {/* Airline dropdown */}
+                {/* Airline filter */}
 
                 <label className="flight-filter-field">
                   <span>Airline</span>
@@ -706,16 +786,14 @@ export default function SearchFlights() {
                   <select
                     value={selectedAirline}
                     onChange={(event) =>
-                      setSelectedAirline(
-                        event.target.value
-                      )
+                      setSelectedAirline(event.target.value)
                     }
                   >
                     <option value="all">
                       All airlines
                     </option>
 
-                    {availableAirlines.map((airline) => (
+                    {airlines.map((airline) => (
                       <option
                         key={airline}
                         value={airline}
@@ -726,44 +804,93 @@ export default function SearchFlights() {
                   </select>
                 </label>
 
-                {/* Price slider */}
+                {/* Stops filter */}
 
-                {priceRange && (
+                <label className="flight-filter-field">
+                  <span>Stops (each direction)</span>
+
+                  <select
+                    value={stopsFilter}
+                    onChange={(event) =>
+                      setStopsFilter(event.target.value)
+                    }
+                  >
+                    <option value="all">Any stops</option>
+                    <option value="nonstop">Nonstop</option>
+                    <option value="one">1 stop</option>
+                    <option value="two-plus">2+ stops</option>
+                  </select>
+                </label>
+
+                {/* Two-thumb price filter */}
+
+                {priceBounds && (
                   <div className="flight-price-filter">
                     <div className="flight-price-filter-heading">
-                      <label htmlFor="flight-max-price">
-                        Maximum total price
-                      </label>
+                      <strong>Price range (total, USD)</strong>
 
-                      <strong>
-                        {displayPrice(currentMaxPrice)}
-                      </strong>
+                      <span>
+                        {formatPrice(selectedMin)} –{" "}
+                        {formatPrice(selectedMax)}
+                      </span>
                     </div>
 
-                    <input
-                      id="flight-max-price"
-                      type="range"
-                      min={priceRange.min}
-                      max={priceRange.max}
-                      step="0.01"
-                      value={currentMaxPrice}
-                      disabled={
-                        priceRange.min === priceRange.max
-                      }
-                      onChange={(event) =>
-                        setMaxPriceLimit(
-                          Number(event.target.value)
-                        )
-                      }
-                    />
+                    <div
+                      className="flight-dual-range"
+                      style={{
+                        "--low-pct": `${minPct}%`,
+                        "--high-pct": `${maxPct}%`,
+                      }}
+                    >
+                      <div className="flight-dual-range-track" />
+                      <div className="flight-dual-range-active" />
+
+                      <input
+                        className="flight-range-min"
+                        type="range"
+                        aria-label="Minimum flight price"
+                        min={priceBounds.min}
+                        max={priceBounds.max}
+                        step="0.01"
+                        value={selectedMin}
+                        disabled={spread === 0}
+                        onChange={(event) =>
+                          setMinLimit(
+                            Math.min(
+                              Number(event.target.value),
+                              selectedMax
+                            )
+                          )
+                        }
+                      />
+
+                      <input
+                        className="flight-range-max"
+                        type="range"
+                        aria-label="Maximum flight price"
+                        min={priceBounds.min}
+                        max={priceBounds.max}
+                        step="0.01"
+                        value={selectedMax}
+                        disabled={spread === 0}
+                        onChange={(event) =>
+                          setMaxLimit(
+                            Math.max(
+                              Number(event.target.value),
+                              selectedMin
+                            )
+                          )
+                        }
+                      />
+                    </div>
 
                     <div className="flight-price-range">
                       <span>
-                        {displayPrice(priceRange.min)}
+                        {formatPrice(priceBounds.min)}
                       </span>
 
                       <span>
-                        {displayPrice(priceRange.max)}
+                        {formatPrice(priceBounds.max)}
                       </span>
                     </div>
                   </div>
@@ -772,12 +899,15 @@ export default function SearchFlights() {
             </div>
 
             <p className="flight-results-message">
-              Prices are USD totals for all selected
-              adults. Flight times are local to each
-              airport.
+              USD totals for all selected adults.
+              Times are local to each airport.
+              Airline filters may match one segment
+              of a multi-airline itinerary.
             </p>
 
-            {/* Filtered flight cards */}
+            {/* =====================================
+                FILTERED FLIGHT CARDS
+            ===================================== */}
 
             {filteredOffers.length > 0 ? (
               <div className="flight-results-list">
@@ -785,11 +915,33 @@ export default function SearchFlights() {
                   const firstFlight =
                     offer.slices?.[0]?.segments?.[0];
 
+                  const adultCount = Math.max(
+                    1,
+                    Number(lastSearch?.adults) || 1
+                  );
+
+                  // Flag unusually high fares.
+                  // Do not remove them automatically.
+
+                  const unusuallyHigh =
+                    offer.comparisonPrice !== null &&
+                    (
+                      offer.comparisonPrice / adultCount >= 10000 ||
+                      (
+                        typicalPrice !== null &&
+                        offer.comparisonPrice > typicalPrice * 3 &&
+                        offer.comparisonPrice / adultCount > 1500
+                      )
+                    );
+
                   return (
                     <article
                       className="flight-result-card"
                       key={`${offer.id}-${index}`}
                     >
+
+                      {/* Airline Header */}
+
                       <div className="flight-result-airline">
                         {firstFlight?.airline_logo && (
                           <img
@@ -806,38 +958,63 @@ export default function SearchFlights() {
                         </strong>
                       </div>
 
-                      {offer.slices?.length ? (
-                        offer.slices.map(
-                          (slice, sliceIndex) => (
-                            <FlightLeg
-                              key={slice.id || sliceIndex}
-                              slice={slice}
-                              label={
-                                sliceIndex === 0
-                                  ? "Outbound"
-                                  : "Return"
-                              }
-                            />
-                          )
+                      {/* Outbound and Return */}
+
+                      {(offer.slices || []).map(
+                        (slice, sliceIndex) => (
+                          <FlightLeg
+                            key={slice.id || sliceIndex}
+                            slice={slice}
+                            label={
+                              sliceIndex === 0
+                                ? "Outbound"
+                                : "Return"
+                            }
+                          />
                         )
-                      ) : (
+                      )}
+
+                      {!offer.slices?.length && (
                         <p>
-                          Detailed flight legs unavailable.
+                          Detailed itinerary unavailable.
                         </p>
                       )}
 
+                      {/* Price */}
+
                       <div className="flight-result-price">
                         <strong>
-                          From{" "}
-                          {displayPrice(
-                            offer.total_amount
+                          {offer.hasLinkedFare
+                            ? "From "
+                            : "Quoted "}
+                          {formatPrice(
+                            offer.comparisonPrice
                           )}
                         </strong>
 
                         <span>
-                          Total quoted price
+                          {offer.hasLinkedFare
+                            ? "Lowest linked booking-provider quote"
+                            : "API quote · booking price not confirmed"}
                         </span>
                       </div>
+
+                      {/* Fare Warning */}
+
+                      {unusuallyHigh && (
+                        <p
+                          className="flight-fare-warning"
+                          role="note"
+                        >
+                          ⚠ This fare is unusually high
+                          compared with other results
+                          or per traveler. Review the
+                          price and full itinerary on
+                          the booking site before paying.
+                        </p>
+                      )}
+
+                      {/* Booking Providers */}
 
                       <BookingOptions
                         options={offer.booking_options}
@@ -851,9 +1028,8 @@ export default function SearchFlights() {
                 <h3>No matching flights</h3>
 
                 <p>
-                  No returned flights match your selected
-                  airline and price limit. Try adjusting
-                  the filters.
+                  Adjust the airline, stops, or
+                  price range to see more results.
                 </p>
 
                 <button
@@ -866,23 +1042,23 @@ export default function SearchFlights() {
             )}
 
             <p className="flight-results-message">
-              Prices and availability may change at
-              the booking provider. Confirm the
-              final fare and fees before purchase.
+              Prices and availability may change.
+              Confirm final fares, baggage, taxes,
+              and fees with the booking provider.
             </p>
           </>
         )}
 
-        {!loading &&
-          !error &&
-          offers.length === 0 && (
-            <p className="flight-results-message">
-              {lastSearch
-                ? "No flights were returned. Try another route or date."
-                : "Enter your trip details above to find available flights."}
-            </p>
-          )}
+        {!loading && !error && offers.length === 0 && (
+          <p className="flight-results-message">
+            {lastSearch
+              ? "No flights were returned. Try another route or date."
+              : "Select your departure and destination airports and travel dates to find flights."}
+          </p>
+        )}
       </div>
+
+      {/* Bottom Note */}
 
       <div className="search-flights-note">
         <span aria-hidden="true">✈</span>

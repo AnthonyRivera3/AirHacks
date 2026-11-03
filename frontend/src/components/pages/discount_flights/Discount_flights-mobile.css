@@ -191,3 +191,98 @@
     animation: none !important;
   }
 }
+
+
+/* =========================================
+   LIVE DEALS — MOBILE
+========================================= */
+
+@media (max-width: 700px) {
+  .discount-deals-search,
+  .discount-deals-results {
+    width: calc(100% - 28px);
+  }
+
+  .discount-deals-search {
+    margin-top: 24px;
+    padding: 21px 16px;
+    border-radius: 14px;
+  }
+
+  .discount-deals-form {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 17px;
+  }
+
+  .discount-deals-form button {
+    width: 100%;
+  }
+
+  .discount-deals-results {
+    margin-top: 31px;
+    padding-bottom: 42px;
+  }
+
+  .discount-deals-results-heading {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .discount-deals-results-heading h2 {
+    font-size: 1.5rem;
+  }
+
+  .discount-deals-count {
+    font-size: 0.75rem;
+    padding: 8px 10px;
+  }
+
+  .discount-deals-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .discount-deals-toolbar > label:first-child {
+    width: 100%;
+  }
+
+  .discount-deals-checkbox {
+    min-height: 35px;
+  }
+
+  .discount-deals-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 17px;
+  }
+
+  .discount-deal-image {
+    height: 205px;
+  }
+
+  .discount-deal-content {
+    padding: 18px;
+  }
+
+  .discount-deal-price-header strong {
+    font-size: 1.5rem;
+  }
+
+  .discount-deals-status {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 380px) {
+  .discount-deals-results-heading {
+    flex-wrap: wrap;
+  }
+
+  .discount-deal-details {
+    gap: 10px;
+  }
+
+  .discount-deal-price-header strong {
+    font-size: 1.35rem;
+  }
+}
