@@ -293,3 +293,71 @@
     font-size: 0.68rem;
   }
 }
+
+
+/* =========================================
+   MOBILE FLIGHT FILTERS
+========================================= */
+
+@media (max-width: 700px) {
+  .flight-results-heading {
+    margin-bottom: 18px;
+  }
+
+  .flight-filters {
+    padding: 19px 16px;
+    border-radius: 13px;
+  }
+
+  .flight-filters-heading {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .flight-filters-heading h3 {
+    font-size: 1.05rem;
+  }
+
+  .flight-filters-heading p {
+    font-size: 0.8rem;
+  }
+
+  .flight-clear-filters {
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+
+  .flight-filters-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 25px;
+  }
+
+  .flight-filter-field select {
+    min-height: 50px;
+    font-size: 1rem;
+  }
+
+  .flight-price-filter-heading {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .flight-price-filter-heading strong {
+    font-size: 1rem;
+  }
+
+  .flight-price-filter input[type="range"] {
+    min-height: 28px;
+    touch-action: pan-y;
+  }
+
+  .flight-price-range {
+    font-size: 0.78rem;
+  }
+
+  .flight-no-matches {
+    padding: 26px 15px;
+  }
+}
+
