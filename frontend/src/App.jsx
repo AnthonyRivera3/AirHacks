@@ -2,12 +2,28 @@
 import { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 
+import { Navigate } from "react-router-dom";
+import Login from "./components/login/Login";
+
 import Navbar from "./components/navbar/Navbar";
 import Home from "./components/home/Home";
 import SearchFlights from "./components/pages/search_flights/Search_flights";
 import DiscountFlights from "./components/pages/discount_flights/Discount_flights";
 
 import "./App.css";
+
+
+
+function RequireLogin({ children }) {
+  const isLoggedIn =
+    sessionStorage.getItem("airhacks-demo-login") === "true";
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
 
 function ScrollHandler() {
   const { pathname, hash } = useLocation();
@@ -38,12 +54,34 @@ function App() {
 
       <main className="app-main">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/search-flights" element={<SearchFlights />} />
-          <Route path="/deals" element={<DiscountFlights />} />
+          <Route path="/login" element={<Login />} />
 
-          {/* Unknown URLs return to the homepage. */}
-          <Route path="*" element={<Home />} />
+          <Route
+            path="/"
+            element={
+              <RequireLogin>
+                <Home />
+              </RequireLogin>
+            }
+          />
+
+          <Route
+            path="/search-flights"
+            element={
+              <RequireLogin>
+                <SearchFlights />
+              </RequireLogin>
+            }
+          />
+
+          <Route
+            path="/deals"
+            element={
+              <RequireLogin>
+                <DiscountFlights />
+              </RequireLogin>
+            }
+          />
         </Routes>
       </main>
     </>
