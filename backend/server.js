@@ -10,12 +10,46 @@ const SEARCHAPI_URL = "https://www.searchapi.io/api/v1/search";
 const CACHE_MS = 30_000;
 const searchCache = new Map();
 
-app.use(cors());
+// Allow the React frontend to send and receive
+// the verified login session cookie.
+app.use(
+  cors({
+    origin:
+      process.env.FRONTEND_ORIGIN ||
+      "http://localhost:5173",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
+// ========================================
+// AIRHACKS AUTHENTICATION
+// ========================================
+// Keep these routes BEFORE all /api/flights routes.
+
+const { authRouter, requireAuth } = require("./auth");
+
+// Username/password and email verification endpoints.
+app.use("/api/auth", authRouter);
+
+// Require a verified session for flight searches
+// and discounted-flight searches.
+app.use("/api/flights", requireAuth);
+
+// ========================================
+// BACKEND STATUS
+// ========================================
+
 app.get("/", (_req, res) => {
-  res.json({ message: "AirHacks backend is running!" });
+  res.json({
+    message: "AirHacks backend is running!",
+  });
 });
+
+// ========================================
+// FORMATTING AND VALIDATION HELPERS
+// ========================================
 
 function validDate(value) {
   if (
@@ -74,6 +108,10 @@ function normalizeBookingPart(part) {
   };
 }
 
+// ========================================
+// NORMALIZE SKYSCANNER FLIGHT RESULTS
+// ========================================
+
 function normalizeItineraries(data) {
   return data.itineraries.map((itinerary, itineraryIndex) => ({
     id: String(itinerary.id ?? itineraryIndex),
@@ -82,7 +120,9 @@ function normalizeItineraries(data) {
     total_currency: "USD",
 
     slices: (
-      Array.isArray(itinerary.legs) ? itinerary.legs : []
+      Array.isArray(itinerary.legs)
+        ? itinerary.legs
+        : []
     ).map((leg, legIndex) => ({
       id: `${itineraryIndex}-${legIndex}`,
 
@@ -91,7 +131,7 @@ function normalizeItineraries(data) {
 
       duration_minutes:
         leg.total_duration != null &&
-          Number.isFinite(Number(leg.total_duration))
+        Number.isFinite(Number(leg.total_duration))
           ? Number(leg.total_duration)
           : null,
 
@@ -102,13 +142,16 @@ function normalizeItineraries(data) {
           : null,
 
       segments: (
-        Array.isArray(leg.flights) ? leg.flights : []
+        Array.isArray(leg.flights)
+          ? leg.flights
+          : []
       ).map((flight) => ({
         departure: normalizeAirport(flight.departure_airport),
         arrival: normalizeAirport(flight.arrival_airport),
 
         airline_name: flight.airline || null,
-        operating_airline: flight.operating_airline || null,
+        operating_airline:
+          flight.operating_airline || null,
         airline_code: flight.airline_code || null,
         airline_logo: httpsUrl(flight.airline_logo),
         flight_number: flight.flight_number || null,
@@ -143,7 +186,9 @@ function normalizeItineraries(data) {
 function providerError(data) {
   const detail =
     data?.error?.message ||
-    (typeof data?.error === "string" ? data.error : null) ||
+    (typeof data?.error === "string"
+      ? data.error
+      : null) ||
     data?.errors?.[0]?.message ||
     data?.message;
 
@@ -158,6 +203,10 @@ function providerError(data) {
     )
     .slice(0, 250);
 }
+
+// ========================================
+// SKYSCANNER FLIGHT SEARCH
+// ========================================
 
 app.post("/api/flights/search", async (req, res) => {
   const body = req.body || {};
@@ -176,7 +225,8 @@ app.post("/api/flights/search", async (req, res) => {
   const returnDate = body.returnDate;
 
   const tripType =
-    body.tripType || (returnDate ? "round-trip" : "one-way");
+    body.tripType ||
+    (returnDate ? "round-trip" : "one-way");
 
   const adults = Number(
     body.adults ?? body.passengers ?? 1
@@ -194,7 +244,9 @@ app.post("/api/flights/search", async (req, res) => {
     first_class: "first_class",
   };
 
-  const cabinKey = String(body.cabinClass || "economy")
+  const cabinKey = String(
+    body.cabinClass || "economy"
+  )
     .trim()
     .toLowerCase()
     .replace(/[ -]/g, "_");
@@ -231,16 +283,19 @@ app.post("/api/flights/search", async (req, res) => {
 
   if (
     tripType === "round-trip" &&
-    (!validDate(returnDate) || returnDate < departureDate)
+    (!validDate(returnDate) ||
+      returnDate < departureDate)
   ) {
     return res.status(400).json({
-      error: "Return date must be on or after departure date.",
+      error:
+        "Return date must be on or after departure date.",
     });
   }
 
   if (tripType === "one-way" && returnDate) {
     return res.status(400).json({
-      error: "One-way searches cannot include a return date.",
+      error:
+        "One-way searches cannot include a return date.",
     });
   }
 
@@ -287,7 +342,9 @@ app.post("/api/flights/search", async (req, res) => {
     arrival_id: destination,
     outbound_date: departureDate,
     flight_type:
-      tripType === "round-trip" ? "round_trip" : "one_way",
+      tripType === "round-trip"
+        ? "round_trip"
+        : "one_way",
     travel_class: travelClass,
     adults: String(adults),
   });
@@ -316,7 +373,8 @@ app.post("/api/flights/search", async (req, res) => {
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${process.env.SEARCHAPI_API_KEY}`,
+          Authorization:
+            `Bearer ${process.env.SEARCHAPI_API_KEY}`,
           Accept: "application/json",
         },
         signal: AbortSignal.timeout(65000),
@@ -330,12 +388,19 @@ app.post("/api/flights/search", async (req, res) => {
       data = JSON.parse(rawText);
     } catch {
       return res.status(502).json({
-        error: "SearchAPI returned a non-JSON response.",
+        error:
+          "SearchAPI returned a non-JSON response.",
       });
     }
 
-    if (!response.ok || data?.error || data?.errors) {
-      const status = response.ok ? 502 : response.status;
+    if (
+      !response.ok ||
+      data?.error ||
+      data?.errors
+    ) {
+      const status = response.ok
+        ? 502
+        : response.status;
 
       return res.status(status).json({
         error: providerError(data),
@@ -361,7 +426,9 @@ app.post("/api/flights/search", async (req, res) => {
     // Short cache to avoid immediate duplicate trial searches.
     // Confirm caching is permitted by your provider's terms.
     if (searchCache.size >= 50) {
-      searchCache.delete(searchCache.keys().next().value);
+      searchCache.delete(
+        searchCache.keys().next().value
+      );
     }
 
     searchCache.set(cacheKey, {
@@ -392,18 +459,20 @@ app.post("/api/flights/search", async (req, res) => {
   }
 });
 
-
-/* =========================================
-   AIRHACKS — GOOGLE FLIGHTS DEALS
-   Add before the app.listen section.
-========================================= */
+// ========================================
+// GOOGLE FLIGHTS DEALS
+// ========================================
 
 const DEALS_CACHE_MS = 60 * 60 * 1000;
 const dealsCache = new Map();
 const pendingDealRequests = new Map();
 
 function validDealPrice(value) {
-  if (value === null || value === undefined || value === "") {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
     return null;
   }
 
@@ -441,7 +510,9 @@ function safeDealImage(value) {
 
   try {
     const url = new URL(value);
-    return url.protocol === "https:" ? url.href : null;
+    return url.protocol === "https:"
+      ? url.href
+      : null;
   } catch {
     return null;
   }
@@ -455,10 +526,13 @@ function normalizeFlightDeal(deal) {
     return null;
   }
 
-  const typicalPrice = validDealPrice(deal.typical_price);
+  const typicalPrice = validDealPrice(
+    deal.typical_price
+  );
 
   const savingsAmount =
-    typicalPrice !== null && typicalPrice > price
+    typicalPrice !== null &&
+    typicalPrice > price
       ? Math.max(0, typicalPrice - price)
       : null;
 
@@ -473,24 +547,27 @@ function normalizeFlightDeal(deal) {
         suppliedPercent < 100
         ? suppliedPercent
         : Math.round(
-          (savingsAmount / typicalPrice) * 100
-        )
+            (savingsAmount / typicalPrice) * 100
+          )
       : null;
 
   return {
     id: String(
       deal.position ??
-      `${destination.name}-${deal.outbound_date}`
+        `${destination.name}-${deal.outbound_date}`
     ),
 
     destination: destination.name,
     country: destination.country || "",
-    destinationCode: destination.airport_code || "",
-    destinationImage: safeDealImage(destination.image),
+    destinationCode:
+      destination.airport_code || "",
+    destinationImage:
+      safeDealImage(destination.image),
     description: destination.description || "",
     tagline: destination.tagline || "",
 
-    originCode: deal.origin?.airport_code || "",
+    originCode:
+      deal.origin?.airport_code || "",
 
     outboundDate: deal.outbound_date || null,
     returnDate: deal.return_date || null,
@@ -505,7 +582,8 @@ function normalizeFlightDeal(deal) {
     savingsAmount,
     savingsPercentage,
 
-    airline: deal.airline || "Airline unavailable",
+    airline:
+      deal.airline || "Airline unavailable",
     airlineCode: deal.airline_code || "",
 
     stops:
@@ -515,8 +593,10 @@ function normalizeFlightDeal(deal) {
 
     duration: deal.flight_duration || "",
 
-    isRoundTrip: Boolean(deal.is_round_trip),
-    bookingUrl: safeDealUrl(deal.booking_link),
+    isRoundTrip:
+      Boolean(deal.is_round_trip),
+    bookingUrl:
+      safeDealUrl(deal.booking_link),
   };
 }
 
@@ -543,7 +623,9 @@ async function requestFlightDeals(origin) {
     }
   );
 
-  const data = await response.json().catch(() => null);
+  const data = await response
+    .json()
+    .catch(() => null);
 
   if (
     !response.ok ||
@@ -556,7 +638,9 @@ async function requestFlightDeals(origin) {
         : "Could not retrieve flight deals from SearchAPI."
     );
 
-    error.status = response.status === 429 ? 429 : 502;
+    error.status =
+      response.status === 429 ? 429 : 502;
+
     throw error;
   }
 
@@ -591,7 +675,8 @@ async function requestFlightDeals(origin) {
   }
 
   dealsCache.set(origin, {
-    expiresAt: Date.now() + DEALS_CACHE_MS,
+    expiresAt:
+      Date.now() + DEALS_CACHE_MS,
     payload,
   });
 
@@ -606,19 +691,24 @@ app.get("/api/flights/deals", async (req, res) => {
 
   if (!/^[A-Z]{3}$/.test(origin)) {
     return res.status(400).json({
-      error: "Select a valid departure airport.",
+      error:
+        "Select a valid departure airport.",
     });
   }
 
   if (!process.env.SEARCHAPI_API_KEY) {
     return res.status(503).json({
-      error: "SearchAPI key is not configured.",
+      error:
+        "SearchAPI key is not configured.",
     });
   }
 
   const cached = dealsCache.get(origin);
 
-  if (cached && cached.expiresAt > Date.now()) {
+  if (
+    cached &&
+    cached.expiresAt > Date.now()
+  ) {
     return res.json({
       ...cached.payload,
       cached: true,
@@ -629,15 +719,20 @@ app.get("/api/flights/deals", async (req, res) => {
     // Share one upstream request when multiple
     // visitors request the same airport at once.
     if (!pendingDealRequests.has(origin)) {
-      const pending = requestFlightDeals(origin)
-        .finally(() => {
-          pendingDealRequests.delete(origin);
-        });
+      const pending = requestFlightDeals(
+        origin
+      ).finally(() => {
+        pendingDealRequests.delete(origin);
+      });
 
-      pendingDealRequests.set(origin, pending);
+      pendingDealRequests.set(
+        origin,
+        pending
+      );
     }
 
-    const payload = await pendingDealRequests.get(origin);
+    const payload =
+      await pendingDealRequests.get(origin);
 
     return res.json({
       ...payload,
@@ -649,15 +744,20 @@ app.get("/api/flights/deals", async (req, res) => {
       error.message
     );
 
-    return res.status(error.status || 502).json({
-      error:
-        error.status === 429
-          ? "Too many requests to the flight deals provider. Try again later."
-          : "Flight deals are temporarily unavailable. Please try again.",
-    });
+    return res
+      .status(error.status || 502)
+      .json({
+        error:
+          error.status === 429
+            ? "Too many requests to the flight deals provider. Try again later."
+            : "Flight deals are temporarily unavailable. Please try again.",
+      });
   }
 });
 
+// ========================================
+// START AIRHACKS SERVER
+// ========================================
 
 if (require.main === module) {
   app.listen(PORT, () => {

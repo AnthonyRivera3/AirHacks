@@ -17,8 +17,8 @@
   align-items: center;
   justify-content: center;
   gap: 25px;
-  min-height: calc(100vh - 82px);
-  min-height: calc(100dvh - 82px);
+  min-height: 100vh;
+  min-height: 100dvh;
   padding: 64px 20px 40px;
   overflow: hidden;
   color: var(--login-text);
@@ -242,6 +242,51 @@
   outline: 3px solid #a5f3fc;
   outline-offset: 3px;
 }
+
+/* Two-step login states, styled consistently with the existing card */
+.ah-login-error {
+  padding: 12px 14px;
+  margin: 0 0 18px;
+  border: 1px solid rgba(252, 165, 165, .5);
+  border-radius: 9px;
+  background: rgba(127, 29, 29, .25);
+  color: #fecaca;
+  font-size: .86rem;
+  line-height: 1.5;
+}
+.ah-login-submit:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+  filter: none;
+  transform: none;
+}
+.ah-login-code-input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  font-size: 26px !important;
+  text-align: center;
+  letter-spacing: .42em;
+  font-weight: 800;
+}
+.ah-login-helper {
+  color: #8aa6b8;
+  font-size: .78rem;
+  line-height: 1.5;
+}
+.ah-login-back {
+  align-self: center;
+  border: 0;
+  background: transparent;
+  padding: 9px 6px;
+  color: #85dbf7;
+  font: inherit;
+  font-size: .81rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ah-login-back:hover { color: #d6f5ff; }
+.ah-login-back:disabled { opacity: .6; cursor: not-allowed; }
 
 .ah-login-demo-note {
   margin: 24px 0 0;

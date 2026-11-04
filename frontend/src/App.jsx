@@ -4,6 +4,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 
 import { Navigate } from "react-router-dom";
 import Login from "./components/login/Login";
+import RequireAuth from "./components/login/RequireAuth";
 
 import Navbar from "./components/navbar/Navbar";
 import Home from "./components/home/Home";
@@ -59,27 +60,27 @@ function App() {
           <Route
             path="/"
             element={
-              <RequireLogin>
+              <RequireAuth>
                 <Home />
-              </RequireLogin>
+              </RequireAuth>
             }
           />
 
           <Route
             path="/search-flights"
             element={
-              <RequireLogin>
+              <RequireAuth>
                 <SearchFlights />
-              </RequireLogin>
+              </RequireAuth>
             }
           />
 
           <Route
             path="/deals"
             element={
-              <RequireLogin>
+              <RequireAuth>
                 <DiscountFlights />
-              </RequireLogin>
+              </RequireAuth>
             }
           />
         </Routes>
