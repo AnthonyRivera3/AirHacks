@@ -1,17 +1,14 @@
-
-/* =========================================
-   AIRHACKS — MOBILE FLIGHT SEARCH
-========================================= */
+/* =====================================================
+   AIRHACKS â€” MOBILE FLIGHT SEARCH
+   Clean responsive styles; compact result cards
+   ===================================================== */
 
 @media (max-width: 700px) {
-
-  /* Page */
+  /* Page and hero */
 
   .search-flights-page {
     padding: 46px 16px 65px;
   }
-
-  /* Hero */
 
   .search-flights-hero {
     margin-bottom: 30px;
@@ -34,7 +31,7 @@
     line-height: 1.6;
   }
 
-  /* Search form card */
+  /* Search form; keep state -> airport picker */
 
   .search-flights-card {
     padding: 24px 18px;
@@ -57,6 +54,11 @@
     gap: 18px;
   }
 
+  .flight-airport-picker {
+    padding: 15px;
+    gap: 15px;
+  }
+
   .flight-field {
     gap: 8px;
   }
@@ -68,240 +70,33 @@
   }
 
   .flight-search-button {
+    grid-column: auto;
     width: 100%;
     min-height: 54px;
     margin-top: 4px;
   }
 
-  /* Results section */
+  /* Results and filters */
 
   .flight-results {
     margin-top: 30px;
   }
 
   .flight-results h2 {
-    margin-bottom: 14px;
     font-size: 1.5rem;
   }
 
-  .flight-results-list {
-    gap: 18px;
-    margin-top: 18px;
-  }
-
-  .flight-results > .flight-results-message {
-    padding: 15px;
-    font-size: 0.85rem;
-  }
-
-  /* Main flight card */
-
-  .flight-result-card {
-    gap: 0;
-    padding: 17px;
-    border-radius: 15px;
-  }
-
-  /* Airline header */
-
-  .flight-result-airline {
-    gap: 11px;
-    padding-bottom: 16px;
+  .flight-results-heading {
     margin-bottom: 16px;
   }
 
-  .flight-result-airline img {
-    width: 38px;
-    height: 38px;
+  .flight-results-heading p {
+    font-size: 0.83rem;
   }
 
-  .flight-result-airline strong {
-    font-size: 1rem;
-  }
-
-  /* Flight leg */
-
-  .flight-leg {
-    padding: 16px 12px;
-    border-radius: 11px;
-  }
-
-  .flight-leg + .flight-leg {
-    margin-top: 12px;
-  }
-
-  .flight-leg-label {
-    margin-bottom: 17px;
-  }
-
-  .flight-leg-label strong {
-    font-size: 0.7rem;
-  }
-
-  /* Route layout */
-
-  .flight-result-route {
-    grid-template-columns:
-      minmax(0, 1fr)
-      minmax(82px, 0.9fr)
-      minmax(0, 1fr);
-
-    gap: 8px;
-  }
-
-  .flight-result-route > div {
-    gap: 6px;
-  }
-
-  .flight-result-route > div strong {
-    font-size: clamp(1rem, 4.5vw, 1.4rem);
-    letter-spacing: -0.4px;
-  }
-
-  .flight-result-route > div span {
-    font-size: 0.8rem;
-  }
-
-  .flight-result-route > div small {
-    font-size: 0.73rem;
-  }
-
-  .flight-result-route .flight-result-duration {
-    gap: 7px;
-    padding: 0 3px;
-  }
-
-  .flight-result-duration span {
-    font-size: 0.72rem;
-    line-height: 1.4;
-  }
-
-  .flight-leg .flight-results-message {
-    margin-top: 16px;
-    font-size: 0.74rem;
-  }
-
-  /* Price */
-
-  .flight-result-price {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-
-    margin-top: 16px;
-    padding: 16px;
-
-    border-radius: 11px;
-  }
-
-  .flight-result-price strong {
-    font-size: 1.55rem;
-  }
-
-  .flight-result-price span {
-    font-size: 0.8rem;
-    text-align: left;
-  }
-
-  /* Booking providers */
-
-  .flight-booking-options {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 11px;
-
-    margin-top: 19px;
-    padding-top: 19px;
-  }
-
-  .flight-booking-options > strong {
-    margin-bottom: 3px;
-    font-size: 0.98rem;
-  }
-
-  .flight-booking-option {
-    padding: 15px;
-    gap: 13px;
-    border-radius: 11px;
-  }
-
-  .flight-booking-option > p {
-    font-size: 0.9rem;
-  }
-
-  .flight-booking-option > a,
-  .flight-booking-option > div a {
-    min-height: 44px;
-    padding: 11px 12px;
-    font-size: 0.84rem;
-  }
-
-  /* Bottom note */
-
-  .search-flights-note {
-    align-items: flex-start;
-    margin-top: 26px;
-    font-size: 0.85rem;
-    line-height: 1.6;
-    text-align: left;
-  }
-}
-
-/* =========================================
-   VERY SMALL SCREENS
-========================================= */
-
-@media (max-width: 380px) {
-  .search-flights-page {
-    padding-left: 11px;
-    padding-right: 11px;
-  }
-
-  .search-flights-card {
-    padding: 18px 13px;
-  }
-
-  .flight-result-card {
-    padding: 12px;
-  }
-
-  .flight-leg {
-    padding: 13px 9px;
-  }
-
-  .flight-result-route {
-    grid-template-columns:
-      minmax(0, 1fr)
-      minmax(75px, 0.85fr)
-      minmax(0, 1fr);
-
-    gap: 5px;
-  }
-
-  .flight-result-route > div strong {
-    font-size: 0.96rem;
-  }
-
-  .flight-result-route > div span {
-    font-size: 0.75rem;
-  }
-
-  .flight-result-route > div small {
-    font-size: 0.66rem;
-  }
-
-  .flight-result-duration span {
-    font-size: 0.68rem;
-  }
-}
-
-
-/* =========================================
-   MOBILE FLIGHT FILTERS
-========================================= */
-
-@media (max-width: 700px) {
-  .flight-results-heading {
-    margin-bottom: 18px;
+  .flight-results > .flight-results-message {
+    padding: 13px 14px;
+    font-size: 0.82rem;
   }
 
   .flight-filters {
@@ -310,7 +105,6 @@
   }
 
   .flight-filters-heading {
-    align-items: flex-start;
     gap: 12px;
     margin-bottom: 20px;
   }
@@ -330,7 +124,7 @@
 
   .flight-filters-grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: 25px;
+    gap: 22px;
   }
 
   .flight-filter-field select {
@@ -338,43 +132,29 @@
     font-size: 1rem;
   }
 
-  .flight-price-filter-heading {
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .flight-price-filter-heading strong {
-    font-size: 1rem;
-  }
-
-  .flight-price-filter input[type="range"] {
-    min-height: 28px;
-    touch-action: pan-y;
-  }
-
-  .flight-price-range {
-    font-size: 0.78rem;
-  }
-
-  .flight-no-matches {
-    padding: 26px 15px;
-  }
-}
-
-
-
-/* =========================================
-   ADVANCED FILTERS — MOBILE
-========================================= */
-
-@media (max-width: 700px) {
-  .flight-filters-grid {
+  /* Time filters sit below the main filters on mobile. */
+  .flight-time-filters {
     grid-template-columns: minmax(0, 1fr);
-    gap: 22px;
+    gap: 13px;
+    margin-top: 18px;
+    padding-top: 16px;
   }
 
-  .flight-filters-grid .flight-price-filter {
-    grid-column: auto;
+  .flight-time-window {
+    padding: 12px 13px 13px;
+  }
+
+  .flight-time-inputs {
+    gap: 10px;
+  }
+
+  .flight-time-field input[type="time"] {
+    min-height: 44px;
+    font-size: 0.9rem;
+  }
+
+  .flight-time-note {
+    font-size: 0.75rem;
   }
 
   .flight-price-filter-heading {
@@ -382,7 +162,7 @@
   }
 
   .flight-price-filter-heading span {
-    font-size: 1rem;
+    font-size: 0.94rem;
   }
 
   .flight-dual-range {
@@ -398,6 +178,7 @@
   .flight-price-filter .flight-dual-range input[type="range"] {
     height: 40px;
     min-height: 0;
+    touch-action: pan-y;
   }
 
   .flight-dual-range input[type="range"]::-webkit-slider-thumb {
@@ -414,24 +195,185 @@
     font-size: 0.78rem;
   }
 
+  /* One compact flight card per row */
+
+  .flight-results-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 13px;
+    margin-top: 15px;
+  }
+
+  .flight-result-card {
+    padding: 13px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+
+  .flight-result-airline {
+    gap: 9px;
+    padding-bottom: 9px;
+  }
+
+  .flight-result-airline img {
+    width: 27px;
+    height: 27px;
+  }
+
+  .flight-result-airline strong {
+    font-size: 0.92rem;
+  }
+
+  .flight-leg {
+    padding: 11px;
+    border-radius: 9px;
+  }
+
+  .flight-leg-label {
+    margin-bottom: 9px;
+  }
+
+  .flight-leg-label strong {
+    font-size: 0.68rem;
+  }
+
+  .flight-result-route {
+    grid-template-columns: minmax(0, 1fr) minmax(64px, 0.9fr) minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .flight-result-route > div {
+    gap: 4px;
+  }
+
+  .flight-result-route > div strong {
+    font-size: clamp(0.82rem, 3.4vw, 1rem);
+    letter-spacing: -0.2px;
+  }
+
+  .flight-result-route > div span {
+    font-size: 0.75rem;
+  }
+
+  .flight-result-route > div small {
+    font-size: 0.68rem;
+  }
+
+  .flight-result-route .flight-result-duration {
+    gap: 4px;
+    padding: 0 2px;
+  }
+
+  .flight-result-duration span {
+    font-size: 0.66rem;
+  }
+
+  .flight-leg .flight-results-message {
+    margin-top: 8px;
+    font-size: 0.7rem;
+  }
+
+  .flight-result-price {
+    padding: 11px 12px;
+    gap: 6px;
+  }
+
+  .flight-result-price strong {
+    font-size: 1.13rem;
+  }
+
+  .flight-result-price span {
+    font-size: 0.7rem;
+  }
+
+  /* Compact booking providers; still one column on phones */
+
+  .flight-booking-options {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding-top: 10px;
+  }
+
+  .flight-booking-option {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .flight-booking-option > p {
+    font-size: 0.76rem;
+  }
+
+  .flight-booking-option > a,
+  .flight-booking-option > div a {
+    min-height: 38px;
+    padding: 9px 10px;
+    font-size: 0.76rem;
+  }
+
+  .flight-booking-toggle {
+    min-height: 41px;
+    font-size: 0.78rem;
+  }
+
   .flight-fare-warning {
-    padding: 13px 14px;
-    font-size: 0.81rem;
+    padding: 10px 12px;
+    font-size: 0.75rem;
+  }
+
+  .flight-no-matches {
+    padding: 26px 15px;
+  }
+
+  .search-flights-note {
+    align-items: flex-start;
+    margin-top: 26px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    text-align: left;
   }
 }
 
+/* Very small phone widths */
 
-@media (max-width: 700px) {
-  .flight-search-form {
+@media (max-width: 380px) {
+  .flight-time-inputs {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .flight-airport-picker {
-    padding: 15px;
-    gap: 15px;
+  .search-flights-page {
+    padding-left: 11px;
+    padding-right: 11px;
   }
 
-  .flight-search-form > .flight-search-button {
-    grid-column: auto;
+  .search-flights-card {
+    padding: 18px 13px;
+  }
+
+  .flight-result-card {
+    padding: 10px;
+  }
+
+  .flight-leg {
+    padding: 10px 8px;
+  }
+
+  .flight-result-route {
+    grid-template-columns: minmax(0, 1fr) minmax(60px, 0.8fr) minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .flight-result-route > div strong {
+    font-size: 0.8rem;
+  }
+
+  .flight-result-route > div span {
+    font-size: 0.7rem;
+  }
+
+  .flight-result-route > div small {
+    font-size: 0.64rem;
+  }
+
+  .flight-result-duration span {
+    font-size: 0.62rem;
   }
 }

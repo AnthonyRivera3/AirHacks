@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import "./Home.css";
 import "./Home-mobile.css";
 
@@ -37,6 +37,60 @@ function Plane() {
 }
 
 function FlightGlobe() {
+  const svgRef = useRef(null);
+  const { key: navigationKey } = useLocation();
+
+  // Restart the SVG motion timeline when the homepage is shown again.
+  // Some browsers leave SMIL animations paused after client-side navigation.
+  useEffect(() => {
+    let firstFrame = 0;
+    let secondFrame = 0;
+
+    function restartFlightAnimation() {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+
+      if (document.hidden || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        return;
+      }
+
+      // Wait until the returned page has been laid out before seeking its timeline.
+      firstFrame = window.requestAnimationFrame(() => {
+        secondFrame = window.requestAnimationFrame(() => {
+          const svg = svgRef.current;
+          if (!svg) return;
+
+          try {
+            // Seeking to zero preserves the individual negative begin offsets
+            // that spread the planes along their four different paths.
+            if (typeof svg.setCurrentTime === "function") {
+              svg.pauseAnimations?.();
+              svg.setCurrentTime(0);
+              svg.unpauseAnimations?.();
+            } else {
+              svg.querySelectorAll("animateMotion").forEach((motion) => {
+                motion.beginElement?.();
+              });
+            }
+          } catch (error) {
+            console.warn("Could not restart the flight animation:", error);
+          }
+        });
+      });
+    }
+
+    restartFlightAnimation();
+    document.addEventListener("visibilitychange", restartFlightAnimation);
+    window.addEventListener("pageshow", restartFlightAnimation);
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+      document.removeEventListener("visibilitychange", restartFlightAnimation);
+      window.removeEventListener("pageshow", restartFlightAnimation);
+    };
+  }, [navigationKey]);
+
   return (
     <div className="flight-visual" aria-label="Animated flight network illustration">
       <div className="network-grid" />
@@ -53,6 +107,8 @@ function FlightGlobe() {
         </div>
 
         <svg
+          key={navigationKey}
+          ref={svgRef}
           className="route-map"
           viewBox="0 0 500 500"
           preserveAspectRatio="xMidYMid meet"

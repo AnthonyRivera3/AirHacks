@@ -149,6 +149,91 @@ function median(values) {
 }
 
 // ========================================
+// LOCAL DEPARTURE-TIME FILTER
+// ========================================
+
+function timeToMinutes(value) {
+  const match =
+    typeof value === "string"
+      ? value.match(/^([01]\d|2[0-3]):([0-5]\d)/)
+      : null;
+
+  if (!match) return null;
+
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function timeInRange(value, earliest, latest) {
+  // No selected time boundaries means no filtering.
+  if (!earliest && !latest) return true;
+
+  const time = timeToMinutes(value);
+  if (time === null) return false;
+
+  const start = earliest ? timeToMinutes(earliest) : null;
+  const end = latest ? timeToMinutes(latest) : null;
+
+  if (start !== null && end !== null) {
+    // E.g. 22:00–04:00 includes late night and early morning.
+    return start <= end
+      ? time >= start && time <= end
+      : time >= start || time <= end;
+  }
+
+  if (start !== null) return time >= start;
+  if (end !== null) return time <= end;
+
+  return true;
+}
+
+function FlightTimeRange({
+  title,
+  earliest,
+  latest,
+  onEarliestChange,
+  onLatestChange,
+}) {
+  return (
+    <fieldset className="flight-time-window">
+      <legend>{title}</legend>
+
+      <div className="flight-time-inputs">
+        <label className="flight-time-field">
+          <span>Earliest</span>
+          <input
+            type="time"
+            value={earliest}
+            onChange={(event) => onEarliestChange(event.target.value)}
+          />
+        </label>
+
+        <label className="flight-time-field">
+          <span>Latest</span>
+          <input
+            type="time"
+            value={latest}
+            onChange={(event) => onLatestChange(event.target.value)}
+          />
+        </label>
+      </div>
+
+      {(earliest || latest) && (
+        <button
+          type="button"
+          className="flight-time-clear"
+          onClick={() => {
+            onEarliestChange("");
+            onLatestChange("");
+          }}
+        >
+          Any time
+        </button>
+      )}
+    </fieldset>
+  );
+}
+
+// ========================================
 // FLIGHT LEG COMPONENT
 // ========================================
 
@@ -218,14 +303,18 @@ function FlightLeg({ slice, label }) {
 // ========================================
 
 function BookingOptions({ options = [] }) {
+  // Collapse long booking-provider lists to keep flight cards compact.
+  const [showAll, setShowAll] = useState(false);
+
   if (!options.length) {
     return (
-      <p>
+      <p className="flight-booking-empty">
         Booking links were not provided for this itinerary.
       </p>
     );
   }
 
+  // Show bookable quotes first, then sort each group from low to high.
   const sortedOptions = [...options].sort(
     (a, b) =>
       Number(isBookable(b)) - Number(isBookable(a)) ||
@@ -233,11 +322,15 @@ function BookingOptions({ options = [] }) {
         (priceNumber(b.price) ?? Infinity)
   );
 
+  const visibleOptions = showAll
+    ? sortedOptions
+    : sortedOptions.slice(0, 3);
+
   return (
     <div className="flight-booking-options">
       <strong>Compare booking providers</strong>
 
-      {sortedOptions.map((option, index) => (
+      {visibleOptions.map((option, index) => (
         <div
           className="flight-booking-option"
           key={`${option.provider}-${index}`}
@@ -261,8 +354,7 @@ function BookingOptions({ options = [] }) {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Book outbound with{" "}
-                    {option.departure.provider}
+                    Book outbound with {option.departure.provider}
                   </a>
                 ) : (
                   <span>Outbound booking link unavailable.</span>
@@ -296,6 +388,19 @@ function BookingOptions({ options = [] }) {
           )}
         </div>
       ))}
+
+      {sortedOptions.length > 3 && (
+        <button
+          type="button"
+          className="flight-booking-toggle"
+          aria-expanded={showAll}
+          onClick={() => setShowAll((previous) => !previous)}
+        >
+          {showAll
+            ? "Show fewer providers"
+            : `Show all ${sortedOptions.length} providers`}
+        </button>
+      )}
     </div>
   );
 }
@@ -318,6 +423,10 @@ export default function SearchFlights() {
   // Filters
   const [selectedAirline, setSelectedAirline] = useState("all");
   const [stopsFilter, setStopsFilter] = useState("all");
+  const [outboundEarliest, setOutboundEarliest] = useState("");
+  const [outboundLatest, setOutboundLatest] = useState("");
+  const [returnEarliest, setReturnEarliest] = useState("");
+  const [returnLatest, setReturnLatest] = useState("");
   const [minLimit, setMinLimit] = useState(null);
   const [maxLimit, setMaxLimit] = useState(null);
 
@@ -446,13 +555,35 @@ export default function SearchFlights() {
               return true;
             }));
 
+        // Use the departure airport's LOCAL clock time.
+        // An outbound-only filter works for both one-way and round trips.
+        const outboundTimeMatch = timeInRange(
+          legs[0]?.departure?.time,
+          outboundEarliest,
+          outboundLatest
+        );
+
+        const returnTimeMatch =
+          lastSearch?.tripType !== "round-trip" ||
+          timeInRange(
+            legs[1]?.departure?.time,
+            returnEarliest,
+            returnLatest
+          );
+
         const priceMatch =
           offer.comparisonPrice === null
             ? minLimit === null && maxLimit === null
             : offer.comparisonPrice >= selectedMin - 0.005 &&
               offer.comparisonPrice <= selectedMax + 0.005;
 
-        return airlineMatch && stopsMatch && priceMatch;
+        return (
+          airlineMatch &&
+          stopsMatch &&
+          outboundTimeMatch &&
+          returnTimeMatch &&
+          priceMatch
+        );
       })
       .sort(
         (a, b) =>
@@ -463,6 +594,11 @@ export default function SearchFlights() {
     pricedOffers,
     selectedAirline,
     stopsFilter,
+    outboundEarliest,
+    outboundLatest,
+    returnEarliest,
+    returnLatest,
+    lastSearch?.tripType,
     selectedMin,
     selectedMax,
     minLimit,
@@ -472,6 +608,10 @@ export default function SearchFlights() {
   function resetFilters() {
     setSelectedAirline("all");
     setStopsFilter("all");
+    setOutboundEarliest("");
+    setOutboundLatest("");
+    setReturnEarliest("");
+    setReturnLatest("");
     setMinLimit(null);
     setMaxLimit(null);
   }
@@ -896,6 +1036,32 @@ export default function SearchFlights() {
                   </div>
                 )}
               </div>
+
+              {/* Local departure-time filters; no additional API requests. */}
+              <div className="flight-time-filters">
+                <FlightTimeRange
+                  title="Outbound departure time"
+                  earliest={outboundEarliest}
+                  latest={outboundLatest}
+                  onEarliestChange={setOutboundEarliest}
+                  onLatestChange={setOutboundLatest}
+                />
+
+                {lastSearch?.tripType === "round-trip" && (
+                  <FlightTimeRange
+                    title="Return departure time"
+                    earliest={returnEarliest}
+                    latest={returnLatest}
+                    onEarliestChange={setReturnEarliest}
+                    onLatestChange={setReturnLatest}
+                  />
+                )}
+              </div>
+              <p className="flight-time-note">
+                Departure times are local to each departure airport.
+                Leave a field empty for no limit. A range such as
+                10:00 PM to 4:00 AM spans midnight.
+              </p>
             </div>
 
             <p className="flight-results-message">
@@ -937,7 +1103,7 @@ export default function SearchFlights() {
                   return (
                     <article
                       className="flight-result-card"
-                      key={`${offer.id}-${index}`}
+                      key={offer.id || `flight-${index}`}
                     >
 
                       {/* Airline Header */}
