@@ -10,25 +10,29 @@ const flights = [
   { code: "AH591", from: "SIN", to: "NRT", altitude: "38,000 ft", speed: "530 kts", status: "EN ROUTE" },
 ];
 
+// Routes, endpoints, and plane motion all use the same 500 × 500 SVG space.
 const routes = [
-  { id: "route-one", d: "M 80 250 C 165 65, 300 75, 380 170" },
-  { id: "route-two", d: "M 110 365 C 210 480, 360 420, 430 300" },
-  { id: "route-three", d: "M 150 145 C 260 230, 300 325, 450 390" },
-  { id: "route-four", d: "M 45 300 C 170 360, 250 170, 400 115" },
+  { id: "route-one", d: "M 80 250 C 165 65, 300 75, 380 170", start: [80, 250], end: [380, 170] },
+  { id: "route-two", d: "M 110 365 C 210 480, 360 420, 430 300", start: [110, 365], end: [430, 300] },
+  { id: "route-three", d: "M 150 145 C 260 230, 300 325, 450 390", start: [150, 145], end: [450, 390] },
+  { id: "route-four", d: "M 45 300 C 170 360, 250 170, 400 115", start: [45, 300], end: [400, 115] },
 ];
 
-function Plane({ className = "" }) {
+// Draw the plane *inside* the same SVG as its line. The path's local center
+// is exactly (0, 0), the position delivered by animateMotion.
+// The additional 43-degree rotation makes its nose point right, so rotate="auto"
+// follows the tangent of the flight route rather than flying sideways.
+function Plane() {
   return (
-    <svg
-      className={`network-plane ${className}`}
-      viewBox="0 0 64 64"
-      width="22"
-      height="22"
+    <g
+      className="route-aircraft-glyph"
+      transform="translate(-12 -12) scale(0.375) rotate(43 32 32)"
+      fill="#8cf2ff"
+      style={{ filter: "drop-shadow(0 0 4px #00cfff)" }}
       aria-hidden="true"
-      focusable="false"
     >
       <path d="M58 7 39 57l-8-19-18 10 5-18L4 20l54-13ZM31 38l10 5-4 8-6-13Z" />
-    </svg>
+    </g>
   );
 }
 
@@ -53,6 +57,7 @@ function FlightGlobe() {
           viewBox="0 0 500 500"
           preserveAspectRatio="xMidYMid meet"
           role="presentation"
+          aria-hidden="true"
         >
           <defs>
             <filter id="route-glow">
@@ -69,30 +74,22 @@ function FlightGlobe() {
               <path d={route.d} className="route-base" />
               <path d={route.d} className="route-dashes" />
 
-              <circle className="airport-node" r="4">
-                <animateMotion
-                  dur={`${7 + index * 2}s`}
-                  repeatCount="indefinite"
-                  path={route.d}
-                />
-              </circle>
+              {/* Both endpoints remain anchored to the route's endpoints. */}
+              <circle className="airport-node" cx={route.start[0]} cy={route.start[1]} r="3" />
+              <circle className="airport-node" cx={route.end[0]} cy={route.end[1]} r="3" />
 
-              <g className={`moving-plane moving-plane-${index + 1}`}>
+              {/* One SVG path controls both the visible route and its plane. */}
+              <g className={`route-aircraft route-aircraft-${index + 1}`}>
                 <Plane />
                 <animateMotion
-                  dur={`${10 + index * 2}s`}
-                  repeatCount="indefinite"
-                  rotate="auto"
                   path={route.d}
+                  dur={`${10 + index * 2}s`}
+                  begin={`-${index * 2.5}s`}
+                  calcMode="paced"
+                  rotate="auto"
+                  repeatCount="indefinite"
                 />
               </g>
-
-              <circle
-                className="airport-node"
-                cx={index === 0 ? 380 : index === 1 ? 430 : index === 2 ? 450 : 400}
-                cy={index === 0 ? 170 : index === 1 ? 300 : index === 2 ? 390 : 115}
-                r="2.5"
-              />
             </g>
           ))}
 

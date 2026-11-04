@@ -1,207 +1,52 @@
+/* =====================================================
+   AIRHACKS | FLIGHT DEALS â€” COMPLETE MOBILE STYLESHEET
+===================================================== */
 
-@media (max-width: 768px) {
-  .discount-flights-page {
-    padding-bottom: 42px;
-  }
-
-  .discount-flights-page::before {
-    width: 240px;
-    height: 240px;
-    left: -140px;
-    filter: blur(55px);
-  }
-
-  .discount-flights-page::after {
-    width: 260px;
-    height: 260px;
-    right: -150px;
-    filter: blur(55px);
-  }
+@media (max-width: 700px) {
+  .discount-flights-page { padding-bottom: 35px; }
 
   .discount-flights-hero {
-    min-height: 255px;
-    padding: 48px 20px 42px;
+    min-height: 320px;
+    padding: 67px 18px 72px;
+    border-radius: 0 0 20px 20px;
+  }
+
+  .discount-flights-hero::before {
+    opacity: .35;
+    background-size: 360px 420px;
+  }
+
+  .discount-flights-hero::after {
+    opacity: .40;
+    background-size: 460px 490px;
+  }
+
+  .discount-flights-hero-content {
+    width: 100%;
+    padding: 14px 5px;
   }
 
   .discount-flights-eyebrow {
-    font-size: 0.68rem;
-    letter-spacing: 0.16em;
+    margin-bottom: 17px;
+    padding: 8px 12px;
+    font-size: .65rem;
+    letter-spacing: .1em;
   }
 
   .discount-flights-hero h1 {
-    font-size: clamp(2.5rem, 11vw, 3.6rem);
+    font-size: clamp(2.45rem, 10vw, 3.4rem);
+    line-height: 1.10;
   }
 
   .discount-flights-subtitle {
-    max-width: 420px;
-    margin-top: 15px;
-    font-size: 0.95rem;
-    line-height: 1.7;
+    max-width: 390px;
+    margin-top: 18px;
+    font-size: .97rem;
+    line-height: 1.65;
   }
 
-  .discount-flights-empty {
-    width: calc(100% - 28px);
-    margin-top: 22px;
-    padding: 18px 14px 32px;
-    border-radius: 22px;
-  }
-
-  .discount-flights-empty h2 {
-    font-size: 1.65rem;
-  }
-
-  .discount-flights-empty > p:not(.discount-flights-demo-label) {
-    font-size: 0.9rem;
-  }
-
-  .discount-flights-price-field {
-    height: 285px;
-    border-radius: 17px;
-  }
-
-  .deal-price-card {
-    width: 125px;
-    padding: 12px;
-    gap: 6px;
-    border-radius: 14px;
-  }
-
-  .deal-price-card-1 {
-    top: 18%;
-    left: 7%;
-  }
-
-  .deal-price-card-2 {
-    right: 6%;
-    bottom: 13%;
-  }
-
-  .deal-price-card-3 {
-    top: 36%;
-    left: 50%;
-  }
-
-  .deal-route {
-    font-size: 0.65rem;
-  }
-
-  .deal-old-price {
-    font-size: 0.76rem;
-  }
-
-  .deal-new-price {
-    font-size: 1.35rem;
-  }
-
-  .deal-price-arrow {
-    top: 10px;
-    right: 10px;
-    font-size: 1rem;
-  }
-
-  .deal-float {
-    padding: 6px 9px;
-    font-size: 0.75rem;
-    border-radius: 9px;
-  }
-
-  .deal-float-1 {
-    top: 7%;
-    left: 6%;
-  }
-
-  .deal-float-2 {
-    top: 7%;
-    right: 6%;
-  }
-
-  .deal-float-3 {
-    bottom: 7%;
-    left: 7%;
-  }
-
-  .deal-float-4 {
-    right: 7%;
-    bottom: 7%;
-  }
-
-  .deal-orbit-1 {
-    width: 270px;
-    height: 270px;
-  }
-
-  .deal-orbit-2 {
-    width: 190px;
-    height: 190px;
-  }
-
-  .discount-flights-note {
-    max-width: 100%;
-    padding: 9px 12px;
-    font-size: 0.75rem;
-  }
-}
-
-@media (max-width: 380px) {
-  .discount-flights-hero {
-    padding-right: 15px;
-    padding-left: 15px;
-  }
-
-  .discount-flights-empty {
-    width: calc(100% - 20px);
-    padding-right: 10px;
-    padding-left: 10px;
-  }
-
-  .discount-flights-price-field {
-    height: 260px;
-  }
-
-  .deal-price-card {
-    width: 112px;
-    padding: 10px;
-  }
-
-  .deal-price-card-1 {
-    left: 4%;
-  }
-
-  .deal-price-card-2 {
-    right: 4%;
-  }
-
-  .deal-new-price {
-    font-size: 1.2rem;
-  }
-
-  .deal-float {
-    padding: 5px 7px;
-    font-size: 0.68rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .discount-flights-page::before,
-  .discount-flights-page::after,
-  .discount-flights-eyebrow span,
-  .deal-float,
-  .deal-price-card,
-  .deal-price-arrow {
-    animation: none !important;
-  }
-}
-
-
-/* =========================================
-   LIVE DEALS — MOBILE
-========================================= */
-
-@media (max-width: 700px) {
   .discount-deals-search,
-  .discount-deals-results {
-    width: calc(100% - 28px);
-  }
+  .discount-deals-results { width: calc(100% - 28px); }
 
   .discount-deals-search {
     margin-top: 24px;
@@ -211,16 +56,15 @@
 
   .discount-deals-form {
     grid-template-columns: minmax(0, 1fr);
-    gap: 17px;
+    gap: 16px;
+    margin-top: 20px;
   }
 
-  .discount-deals-form button {
-    width: 100%;
-  }
+  .discount-deals-form button { width: 100%; }
 
   .discount-deals-results {
     margin-top: 31px;
-    padding-bottom: 42px;
+    padding-bottom: 16px;
   }
 
   .discount-deals-results-heading {
@@ -228,13 +72,12 @@
     gap: 12px;
   }
 
-  .discount-deals-results-heading h2 {
-    font-size: 1.5rem;
-  }
+  .discount-deals-results-heading h2 { font-size: 1.50rem; }
+  .discount-deals-results-heading p { font-size: .90rem; }
 
   .discount-deals-count {
-    font-size: 0.75rem;
     padding: 8px 10px;
+    font-size: .75rem;
   }
 
   .discount-deals-toolbar {
@@ -243,46 +86,44 @@
     gap: 12px;
   }
 
-  .discount-deals-toolbar > label:first-child {
-    width: 100%;
-  }
-
-  .discount-deals-checkbox {
-    min-height: 35px;
-  }
+  .discount-deals-toolbar > label:first-child { width: 100%; }
+  .discount-deals-checkbox { min-height: 36px; }
 
   .discount-deals-grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: 17px;
+    gap: 18px;
   }
 
-  .discount-deal-image {
-    height: 205px;
+  .discount-deal-image { height: 205px; }
+  .discount-deal-content { padding: 18px; }
+  .discount-deal-price-header strong { font-size: 1.5rem; }
+  .discount-deals-status { min-height: 220px; }
+
+  .discount-flights-empty {
+    width: calc(100% - 28px);
+    padding: 22px 14px;
+    margin-top: 24px;
   }
 
-  .discount-deal-content {
-    padding: 18px;
-  }
-
-  .discount-deal-price-header strong {
-    font-size: 1.5rem;
-  }
-
-  .discount-deals-status {
-    min-height: 220px;
-  }
+  .discount-flights-price-field { height: 245px; }
+  .deal-price-card { width: 112px; padding: 10px; }
+  .deal-price-card-1 { left: 14%; top: 12%; }
+  .deal-price-card-2 { right: 12%; bottom: 12%; }
+  .deal-price-card-3 { display: none; }
+  .deal-new-price { font-size: 1.2rem; }
 }
 
 @media (max-width: 380px) {
-  .discount-deals-results-heading {
-    flex-wrap: wrap;
+  .discount-flights-hero {
+    min-height: 290px;
+    padding: 56px 15px 62px;
   }
 
-  .discount-deal-details {
-    gap: 10px;
-  }
+  .discount-flights-hero h1 { font-size: 2.25rem; }
+  .discount-flights-subtitle { font-size: .89rem; }
+  .discount-flights-eyebrow { font-size: .60rem; }
 
-  .discount-deal-price-header strong {
-    font-size: 1.35rem;
-  }
+  .discount-deals-results-heading { flex-wrap: wrap; }
+  .discount-deal-details { gap: 10px; }
+  .discount-deal-price-header strong { font-size: 1.35rem; }
 }

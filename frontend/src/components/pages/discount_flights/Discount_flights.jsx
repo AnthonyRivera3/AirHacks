@@ -344,7 +344,7 @@ function DiscountFlights() {
 
       <section className="discount-deals-search">
         <div className="discount-deals-search-header">
-          <h2>Where are you flying from?</h2>
+          <h2>Where are you coming from?</h2>
 
           <p>
             Choose your departure airport to discover
