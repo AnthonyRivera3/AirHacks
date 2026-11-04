@@ -1,3 +1,6 @@
+/* =========================================
+   AIRHACKS â€” MOBILE NAVBAR
+========================================= */
 
 .menu-toggle {
   width: 44px;
@@ -31,7 +34,8 @@
   transform: translateY(-7px) rotate(-45deg);
 }
 
-@media (max-width: 850px) {
+/* Collapse earlier so the extra Log Out button doesn't crowd nav links. */
+@media (max-width: 1100px) {
   .navbar {
     min-height: 72px;
     padding: 0 22px;
@@ -81,6 +85,16 @@
     margin-top: 8px;
     min-height: 48px;
   }
+
+  .navbar-logout {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 8px;
+  }
+
+  .navbar-logout-error {
+    text-align: left;
+  }
 }
 
 @media (max-width: 380px) {
@@ -96,5 +110,10 @@
   .brand-icon {
     width: 37px;
     height: 37px;
+  }
+
+  .navbar-menu {
+    padding-right: 14px;
+    padding-left: 14px;
   }
 }

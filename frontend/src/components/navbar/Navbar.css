@@ -1,3 +1,6 @@
+/* =========================================
+   AIRHACKS â€” DESKTOP NAVBAR
+========================================= */
 
 .site-header {
   position: sticky;
@@ -17,13 +20,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 32px;
+  gap: 24px;
 }
 
 .navbar-brand {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
   color: #102b46;
   text-decoration: none;
   font-size: 1.65rem;
@@ -55,7 +59,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: clamp(18px, 2.4vw, 36px);
+  gap: clamp(12px, 1.8vw, 28px);
 }
 
 .navbar-link {
@@ -119,6 +123,61 @@
   box-shadow: 0 8px 18px rgba(20, 120, 201, 0.23);
 }
 
+/* Outlined action â€” separate from the primary Find a Flight CTA. */
+.navbar-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 46px;
+  padding: 0 16px;
+  border: 1px solid #c9d9e7;
+  border-radius: 10px;
+  background: #fff;
+  color: #173651;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease,
+    color 180ms ease;
+}
+
+.navbar-logout:hover:not(:disabled) {
+  background: #eaf5ff;
+  border-color: #1478c9;
+  color: #0e5fa4;
+}
+
+.navbar-logout:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.navbar-logout-error {
+  padding: 10px clamp(20px, 6vw, 100px);
+  background: #fff4f4;
+  border-top: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+.navbar a:focus-visible,
+.navbar button:focus-visible {
+  outline: 3px solid #70baf2;
+  outline-offset: 3px;
+}
+
 .menu-toggle {
   display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar a,
+  .navbar button,
+  .brand-icon {
+    transition: none;
+  }
 }

@@ -1,8 +1,12 @@
 
 import { useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 
-import { Navigate } from "react-router-dom";
 import Login from "./components/login/Login";
 import RequireAuth from "./components/login/RequireAuth";
 
@@ -13,25 +17,15 @@ import DiscountFlights from "./components/pages/discount_flights/Discount_flight
 
 import "./App.css";
 
-
-
-function RequireLogin({ children }) {
-  const isLoggedIn =
-    sessionStorage.getItem("airhacks-demo-login") === "true";
-
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
-}
+/* =========================================
+   AIRHACKS — SCROLL HANDLER
+========================================= */
 
 function ScrollHandler() {
   const { pathname, hash } = useLocation();
 
   useEffect(() => {
     if (hash === "#about") {
-      // Wait for the Home page to render before scrolling to About.
       requestAnimationFrame(() => {
         document.getElementById("about")?.scrollIntoView({
           behavior: "smooth",
@@ -39,24 +33,43 @@ function ScrollHandler() {
         });
       });
     } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     }
   }, [pathname, hash]);
 
   return null;
 }
 
+/* =========================================
+   AIRHACKS — MAIN APPLICATION
+========================================= */
+
 function App() {
+  const location = useLocation();
+
+  // Hide the navbar on the login page.
+  const isLoginPage = location.pathname === "/login";
+
   return (
     <>
       <ScrollHandler />
 
-      <Navbar />
+      {/* Show navbar only outside login */}
+      {!isLoginPage && <Navbar />}
 
       <main className="app-main">
         <Routes>
-          <Route path="/login" element={<Login />} />
 
+          {/* Public login page */}
+          <Route
+            path="/login"
+            element={<Login />}
+          />
+
+          {/* Protected homepage */}
           <Route
             path="/"
             element={
@@ -66,6 +79,7 @@ function App() {
             }
           />
 
+          {/* Protected flight search */}
           <Route
             path="/search-flights"
             element={
@@ -75,6 +89,7 @@ function App() {
             }
           />
 
+          {/* Protected flight deals */}
           <Route
             path="/deals"
             element={
@@ -83,6 +98,13 @@ function App() {
               </RequireAuth>
             }
           />
+
+          {/* Redirect unknown routes to homepage */}
+          <Route
+            path="*"
+            element={<Navigate to="/" replace />}
+          />
+
         </Routes>
       </main>
     </>
