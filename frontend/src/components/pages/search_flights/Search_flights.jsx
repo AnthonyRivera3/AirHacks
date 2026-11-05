@@ -855,9 +855,42 @@ export default function SearchFlights() {
         aria-live="polite"
       >
         {loading && (
-          <p className="flight-results-message">
-            Searching for flights...
-          </p>
+          <div
+            className="flight-search-loading"
+            role="status"
+            aria-live="polite"
+            aria-label="Searching for flights"
+          >
+            <div className="flight-loading-animation" aria-hidden="true">
+              <div className="flight-loading-route">
+                <span className="flight-loading-airport">
+                  {lastSearch?.origin || "FROM"}
+                </span>
+
+                <div className="flight-loading-flight-path">
+                  <span className="flight-loading-plane">✈</span>
+                </div>
+
+                <span className="flight-loading-airport">
+                  {lastSearch?.destination || "TO"}
+                </span>
+              </div>
+            </div>
+
+            <h3>Finding your next adventure...</h3>
+            <p>
+              AirHacks is searching available flights and comparing
+              booking options.
+            </p>
+
+            <div className="flight-loading-progress" aria-hidden="true">
+              <div className="flight-loading-progress-bar" />
+            </div>
+
+            <span className="flight-loading-note">
+              Flight searches may take a moment. Please keep this page open.
+            </span>
+          </div>
         )}
 
         {!loading && error && (

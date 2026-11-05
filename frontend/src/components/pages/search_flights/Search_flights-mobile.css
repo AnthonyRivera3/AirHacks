@@ -377,3 +377,42 @@
     font-size: 0.62rem;
   }
 }
+
+/* ============================================
+   Mobile adjustments for flight search loader
+   ============================================ */
+
+@media (max-width: 700px) {
+  .flight-search-loading {
+    margin: 24px auto;
+    padding: 32px 18px;
+  }
+
+  .flight-loading-route {
+    gap: 10px;
+  }
+
+  .flight-loading-airport {
+    min-width: 43px;
+    font-size: 1rem;
+  }
+
+  .flight-loading-plane {
+    font-size: 24px;
+  }
+
+  .flight-search-loading h3 {
+    font-size: 1.15rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .flight-search-loading {
+    padding: 26px 12px;
+  }
+
+  .flight-loading-airport {
+    min-width: 36px;
+    font-size: 0.87rem;
+  }
+}
