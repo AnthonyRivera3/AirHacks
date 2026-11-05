@@ -1,9 +1,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const API_BASE_URL =
+const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:5001";
+  "http://localhost:5001"
+).replace(/\/+$/, "");
 
 export function useFlightSearch() {
   const [offers, setOffers] = useState([]);
@@ -32,10 +33,15 @@ export function useFlightSearch() {
         `${API_BASE_URL}/api/flights/search`,
         {
           method: "POST",
+
+          // Send the AirHacks login session cookie.
+          credentials: "include",
+
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
+
           body: JSON.stringify(search),
           signal: controller.signal,
         }
@@ -49,6 +55,12 @@ export function useFlightSearch() {
       } catch {
         throw new Error(
           `The backend returned invalid JSON (HTTP ${response.status}).`
+        );
+      }
+
+      if (response.status === 401) {
+        throw new Error(
+          "Your AirHacks login session has expired. Please log in again."
         );
       }
 
@@ -78,7 +90,7 @@ export function useFlightSearch() {
       if (activeRequest.current === controller) {
         setError(
           err instanceof TypeError
-            ? "Could not connect to the AirHacks backend at localhost:5001."
+            ? `Could not connect to the AirHacks backend at ${API_BASE_URL}.`
             : err.message || "Unable to search flights."
         );
       }
