@@ -1,0 +1,390 @@
+/* =========================================
+   AIRHACKS â€” ABOUT PAGE
+   Shared and desktop styles
+========================================= */
+.ah-about-page {
+    --about-dark: #071522;
+    --about-dark-panel: #0e2235;
+    --about-cyan: #20c9ee;
+    --about-teal: #63e9cf;
+    --about-text: #f2f8fc;
+    --about-muted: #aec3d3;
+    position: relative;
+    isolation: isolate;
+    min-height: 100vh;
+    overflow: hidden;
+    background: #061321;
+    color: var(--about-text);
+    font-family: "Manrope", "Inter", system-ui, -apple-system, sans-serif;
+}
+
+.ah-about-page,
+.ah-about-page * {
+    box-sizing: border-box;
+}
+
+.ah-about-glow {
+    position: absolute;
+    z-index: -1;
+    inset: 0 0 auto;
+    height: 920px;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse at 79% 24%, rgba(0, 166, 217, 0.13), transparent 42%),
+        radial-gradient(ellipse at 7% 70%, rgba(37, 193, 185, 0.08), transparent 41%);
+}
+
+.ah-about-intro {
+    width: min(1300px, 100%);
+    min-height: 710px;
+    margin: 0 auto;
+    padding: clamp(68px, 7vw, 112px) clamp(24px, 6vw, 90px) 100px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: clamp(44px, 6vw, 96px);
+    align-items: center;
+}
+
+.ah-about-copy {
+    position: relative;
+    z-index: 2;
+    min-width: 0;
+}
+
+.ah-about-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--about-teal);
+    font-size: 0.73rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+}
+
+.ah-about-eyebrow-line {
+    width: 29px;
+    height: 1px;
+    background: currentColor;
+}
+
+.ah-about-copy h1 {
+    margin: 25px 0 24px;
+    color: #fff;
+    font-size: clamp(3rem, 5.3vw, 5.25rem);
+    line-height: 1.06;
+    font-weight: 850;
+    letter-spacing: -0.065em;
+}
+
+.ah-about-copy h1 em {
+    color: var(--about-teal);
+    font-style: normal;
+}
+
+.ah-about-copy h1 span {
+    display: block;
+}
+
+.ah-about-lead {
+    max-width: 570px;
+    margin: 0;
+    color: #b6ccd9;
+    font-size: clamp(1rem, 1.35vw, 1.16rem);
+    line-height: 1.85;
+}
+
+.ah-about-quote {
+    position: relative;
+    max-width: 565px;
+    margin: 40px 0 0;
+    padding: 23px 24px 23px 29px;
+    border-left: 3px solid var(--about-cyan);
+    border-radius: 0 15px 15px 0;
+    background: rgba(29, 71, 90, 0.3);
+}
+
+.ah-about-quote-mark {
+    position: absolute;
+    top: 3px;
+    right: 16px;
+    color: rgba(32, 201, 238, 0.16);
+    font-family: Georgia, serif;
+    font-size: 5rem;
+    line-height: 1;
+}
+
+.ah-about-quote p {
+    position: relative;
+    margin: 0;
+    font-size: clamp(1.18rem, 1.9vw, 1.5rem);
+    font-weight: 650;
+    line-height: 1.57;
+    letter-spacing: -0.025em;
+}
+
+.ah-about-quote footer {
+    margin-top: 16px;
+    color: #8ed7e4;
+    font-size: 0.81rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.ah-about-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 34px;
+}
+
+.ah-about-primary,
+.ah-about-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-height: 48px;
+    padding: 12px 21px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 750;
+    text-decoration: none;
+    transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.ah-about-primary {
+    background: linear-gradient(110deg, #0abfe9, #64e3d5);
+    color: #062438;
+}
+
+.ah-about-secondary {
+    border: 1px solid rgba(126, 179, 205, 0.36);
+    color: #d0e4ef;
+}
+
+.ah-about-primary:hover,
+.ah-about-secondary:hover {
+    transform: translateY(-2px);
+}
+
+.ah-about-secondary:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: #7ab8cf;
+}
+
+.ah-about-visual {
+    position: relative;
+    width: 100%;
+    max-width: 450px;
+    justify-self: end;
+}
+
+.ah-about-photo-frame {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    aspect-ratio: 0.79;
+    overflow: hidden;
+    border: 1px solid rgba(92, 210, 219, 0.33);
+    border-radius: 23px;
+    background: linear-gradient(135deg, #14354a, #081623);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.3), 0 0 70px rgba(0, 203, 218, 0.07);
+}
+
+.ah-about-founder-photo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 28%;
+}
+
+.ah-about-photo-placeholder {
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: #d8ecf4;
+    text-align: center;
+    background: radial-gradient(circle at 50% 40%, rgba(48, 160, 190, 0.2), transparent 55%);
+}
+
+.ah-about-photo-placeholder[hidden] {
+    display: none;
+}
+
+.ah-about-placeholder-icon {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border: 1px solid rgba(112, 225, 229, 0.33);
+    border-radius: 50%;
+    color: var(--about-cyan);
+    font-size: 2rem;
+}
+
+.ah-about-photo-placeholder strong {
+    font-size: 1.12rem;
+}
+
+.ah-about-photo-placeholder>span:last-child {
+    color: #90adbf;
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
+}
+
+.ah-about-photo-caption {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 65px;
+    padding: 15px 22px;
+    background: linear-gradient(0deg, rgba(4, 14, 22, 0.96), rgba(4, 14, 22, 0.55));
+    font-size: 0.69rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: #e0f6f7;
+}
+
+.ah-about-caption-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--about-teal);
+    box-shadow: 0 0 11px rgba(99, 233, 207, 0.65);
+}
+
+.ah-about-orbit {
+    position: absolute;
+    z-index: 0;
+    top: -26px;
+    right: -27px;
+    bottom: 26px;
+    left: 26px;
+    border: 1px solid rgba(72, 207, 224, 0.19);
+    border-radius: 25px;
+    pointer-events: none;
+}
+
+.ah-about-mission {
+    padding: 100px clamp(24px, 6vw, 90px) 110px;
+    border-top: 1px solid rgba(147, 198, 219, 0.13);
+    background: #0b1d2e;
+}
+
+.ah-about-mission-header,
+.ah-about-values {
+    max-width: 1120px;
+    margin-inline: auto;
+}
+
+.ah-about-section-label {
+    color: var(--about-teal);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.17em;
+}
+
+.ah-about-mission-header h2 {
+    margin: 17px 0 15px;
+    color: #fff;
+    font-size: clamp(2.2rem, 4vw, 3.35rem);
+    letter-spacing: -0.05em;
+    line-height: 1.15;
+}
+
+.ah-about-mission-header h2 span {
+    color: var(--about-cyan);
+}
+
+.ah-about-mission-header>p {
+    max-width: 750px;
+    margin: 0;
+    color: var(--about-muted);
+    font-size: 1rem;
+    line-height: 1.9;
+}
+
+.ah-about-values {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    margin-top: 49px;
+}
+
+.ah-about-value {
+    min-width: 0;
+    padding: 30px 26px;
+    border: 1px solid rgba(116, 167, 194, 0.19);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.ah-about-value-number {
+    color: var(--about-teal);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+}
+
+.ah-about-value h3 {
+    margin: 20px 0 12px;
+    color: #f5fbff;
+    font-size: 1.2rem;
+    letter-spacing: -0.035em;
+}
+
+.ah-about-value p {
+    margin: 0;
+    color: #a8becf;
+    font-size: 0.9rem;
+    line-height: 1.8;
+}
+
+.ah-about-outro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 22px;
+    padding: 35px max(24px, calc((100vw - 1120px) / 2));
+    background: #071522;
+}
+
+.ah-about-outro p {
+    margin: 0;
+    color: #e9f8fc;
+    font-size: clamp(1.2rem, 2.2vw, 1.7rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+.ah-about-outro a {
+    color: var(--about-teal);
+    font-size: 0.9rem;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.ah-about-outro a:hover {
+    text-decoration: underline;
+}
+
+.ah-about-page a:focus-visible {
+    outline: 3px solid #8af1e8;
+    outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ah-about-page a {
+        transition: none;
+    }
+}

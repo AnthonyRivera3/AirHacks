@@ -1,0 +1,38 @@
+/* =========================================
+   AIRHACKS â€” ABOUT PAGE MOBILE
+========================================= */
+@media (max-width: 950px) {
+  .ah-about-intro { min-height: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); gap: 32px; padding: 74px 30px 80px; }
+  .ah-about-copy h1 { font-size: clamp(2.65rem, 5.6vw, 4rem); }
+  .ah-about-quote { margin-top: 30px; }
+  .ah-about-photo-caption { font-size: 0.6rem; padding: 14px 16px; }
+  .ah-about-values { gap: 13px; }
+  .ah-about-value { padding: 25px 20px; }
+}
+@media (max-width: 700px) {
+  .ah-about-intro { grid-template-columns: minmax(0, 1fr); padding: 56px 20px 74px; gap: 52px; }
+  .ah-about-eyebrow { font-size: 0.65rem; letter-spacing: 0.13em; }
+  .ah-about-copy h1 { margin: 22px 0 20px; font-size: clamp(2.75rem, 10vw, 4.3rem); }
+  .ah-about-lead { font-size: 0.97rem; line-height: 1.78; }
+  .ah-about-quote { padding: 21px 20px; margin-top: 30px; }
+  .ah-about-quote p { font-size: 1.23rem; }
+  .ah-about-actions { gap: 11px; }
+  .ah-about-primary, .ah-about-secondary { min-height: 48px; font-size: 0.83rem; }
+  .ah-about-visual { max-width: 420px; width: calc(100% - 18px); justify-self: center; }
+  .ah-about-photo-frame { aspect-ratio: 0.9; }
+  .ah-about-orbit { top: -15px; right: -15px; bottom: 15px; left: 15px; }
+  .ah-about-mission { padding: 73px 20px 83px; }
+  .ah-about-mission-header h2 { font-size: clamp(2.1rem, 8vw, 3rem); }
+  .ah-about-mission-header > p { font-size: 0.94rem; }
+  .ah-about-values { grid-template-columns: minmax(0, 1fr); margin-top: 35px; gap: 13px; }
+  .ah-about-value { padding: 24px; }
+  .ah-about-value h3 { margin-top: 12px; }
+  .ah-about-outro { flex-direction: column; align-items: flex-start; padding: 32px 20px 39px; }
+}
+@media (max-width: 380px) {
+  .ah-about-intro { padding-inline: 15px; }
+  .ah-about-copy h1 { font-size: 2.65rem; }
+  .ah-about-actions { flex-direction: column; align-items: stretch; }
+  .ah-about-mission { padding-inline: 15px; }
+  .ah-about-outro { padding-inline: 15px; }
+}

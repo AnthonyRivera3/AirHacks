@@ -93,7 +93,7 @@ function Navbar() {
           </NavLink>
 
           <Link
-            to="/#about"
+            to="/about"
             className="navbar-link about-link"
             onClick={closeMenu}
           >

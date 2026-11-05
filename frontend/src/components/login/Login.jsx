@@ -143,9 +143,7 @@ export default function Login() {
           </form>
         )}
 
-        <p className="ah-login-demo-note">
-          Accounts are created by the AirHacks administrator. There is no public registration.
-        </p>
+        
       </section>
       <p className="ah-login-footer">
         AIRHACKS <span aria-hidden="true">✦</span> FIND YOUR NEXT DESTINATION

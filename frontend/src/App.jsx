@@ -14,7 +14,7 @@ import Navbar from "./components/navbar/Navbar";
 import Home from "./components/home/Home";
 import SearchFlights from "./components/pages/search_flights/Search_flights";
 import DiscountFlights from "./components/pages/discount_flights/Discount_flights";
-
+import About from "./components/pages/about/About";
 import "./App.css";
 
 /* =========================================
@@ -75,6 +75,15 @@ function App() {
             element={
               <RequireAuth>
                 <Home />
+              </RequireAuth>
+            }
+          />
+
+          <Route
+            path="/about"
+            element={
+              <RequireAuth>
+                <About />
               </RequireAuth>
             }
           />

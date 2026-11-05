@@ -298,14 +298,10 @@ function Home() {
             </svg>
           </div>
           <p className="feature-index">MODULE_01</p>
-          <h2>Live Flight Network</h2>
+          <h2>Live Flight Data</h2>
           <p>
-            Watch aircraft move through a connected world of routes and
-            destinations.
+            Search through up to date current flight timing's and schedule's.
           </p>
-          <span className="feature-link">
-            Explore network <span>↗</span>
-          </span>
         </article>
 
         <article className="feature-card">
@@ -370,7 +366,7 @@ function Home() {
       </section>
 
       <section id="about" className="home-about">
-        <p className="home-eyebrow">ABOUT THE PROJECT // AIRHACKS</p>
+        <p className="home-eyebrow">AIRHACKS</p>
         <h2>Your next destination is only a search away.</h2>
         <p>
           AirHacks brings flight discovery, route exploration, and deal hunting
