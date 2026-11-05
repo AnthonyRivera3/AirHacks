@@ -23,9 +23,10 @@ const SESSION_LIFETIME_MS = 8 * 60 * 60 * 1000;
 const SESSION_COOKIE = "airhacks_session";
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
 const secureCookies = process.env.NODE_ENV === "production";
+
 const cookieOptions = {
   httpOnly: true,
-  sameSite: "lax",
+  sameSite: secureCookies ? "none" : "lax",
   secure: secureCookies,
   path: "/",
 };
