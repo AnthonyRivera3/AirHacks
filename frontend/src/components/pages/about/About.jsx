@@ -55,7 +55,7 @@ export default function About() {
               they make.
             </p>
 
-            <footer>— Founder, Mr Rivera</footer>
+            <footer>— Founder, Mr. Rivera</footer>
           </blockquote>
 
           <div className="ah-about-actions">
